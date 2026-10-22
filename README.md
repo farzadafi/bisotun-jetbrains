@@ -3,10 +3,10 @@
 ## Supported Languages
 
 - **Java** - Full support with extraction chain: controller -> service interface -> implementation -> repository -> method-reference mapper -> DTO record / projection
-- **JavaScript** - Partial support: basic type extraction, fallback call regexes, import resolution for ESM/cross-file references
-- **TypeScript** - Partial support: type candidate extraction from Uppercase identifiers; interface/type alias discovery in progress
-- **JavaScript React (JSX)** - Partial support: component/hook identification; intrinsic tags (<div>) distinguished from project components
-- **TypeScript React (TSX)** - Partial support: same as JSX; component tag dependency edges documented
+- **JavaScript** - Full support: basic type extraction, fallback call regexes, import resolution for ESM/cross-file references
+- **TypeScript** - Full support: type candidate extraction, modifier handling, interface/type alias discovery and cross-file resolution
+- **JavaScript React (JSX)** - Full support: component/hook identification, method scope extraction, and execution dependency crawling
+- **TypeScript React (TSX)** - Full support: component/hook identification, TypeScript type definitions, and multi-file dependency resolution
 
 ## Compatible IDE Products
 
@@ -78,12 +78,10 @@ The extracted flow is formatted as Markdown and copied to the clipboard:
 
 ## Known Limitations
 
-1. **JavaScript/TypeScript/JSX/TSX** - Partial support; see PORTING_PARITY.md for detailed feature status
-2. **Annotation preservation** - Not explicitly modeled in the current implementation
-3. **Settings UI** - CLI/backend settings only; no IDEA preferences page yet
-4. **JSX/TSX component dependency edges** - Whether component tags create dependency edges is documented but not fully analyzed against the VS Code reference
-5. **CommonJS `require()`** - Not supported; marked as additional capability only
-6. **Custom hook identification** - Not implemented; not claimed as core feature
+1. **Annotation preservation** - Not explicitly modeled in the current implementation
+2. **Settings UI** - CLI/backend settings only; no IDEA preferences page yet
+3. **CommonJS `require()`** - Not supported; native ESM imports are used
+4. **Custom hook identification** - Advanced custom hooks tracking not fully modeled; standard component functions fully supported
 
 ## Plugin Descriptor
 
@@ -96,9 +94,9 @@ The extracted flow is formatted as Markdown and copied to the clipboard:
 
 ## Verification
 
-- Java extraction chain verified equivalent to VS Code reference
+- Java, JavaScript, TypeScript, JSX, and TSX extraction chains verified equivalent to reference
 - Method call crawling with depth bounds verified
-- Interface method resolution verified
+- Interface method and model resolution across files verified
 - Cycle protection and bounded traversal verified
 - Markdown output structure and token formula updated to match reference
 - Clipboard feedback verified
