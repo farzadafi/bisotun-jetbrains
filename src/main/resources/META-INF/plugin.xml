@@ -1,0 +1,42 @@
+<idea-plugin>
+    <id>com.bisotun.flowextractor</id>
+    <name>Bisotun Flow Extractor</name>
+    <version>1.0.0</version>
+    <vendor>Bisotun</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="bisotun-java.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="bisotun-js.xml">JavaScript</depends>
+
+    <extensions defaultExtensionNs="com.intellij" />
+
+    <actions>
+        <group id="Bisotun.ActionGroup" text="Bisotun Flow Extractor" popup="true">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+
+            <action id="ExtractFlowAction" class="com.bisotun.ExtractFlowAction"
+                    text="Extract Flow"
+                    description="Extract deep execution call flow and data models">
+                <keyboard-shortcut keymap="$default" first-keystroke="control alt shift F"/>
+            </action>
+
+            <action id="CopyDeepFlowAction" class="com.bisotun.ExtractFlowAction"
+                    text="Copy Deep Flow"
+                    description="Extract deep execution call flow and data models (depth 4)">
+                <keyboard-shortcut keymap="$default" first-keystroke="control alt shift D"/>
+            </action>
+
+            <action id="CopyShallowFlowAction" class="com.bisotun.ExtractFlowAction"
+                    text="Copy Shallow Flow"
+                    description="Extract shallow execution call flow (1 level depth)">
+                <keyboard-shortcut keymap="$default" first-keystroke="control alt shift S"/>
+            </action>
+
+            <action id="CopyCodeOnlyAction" class="com.bisotun.ExtractFlowAction"
+                    text="Copy Code Only"
+                    description="Extract code only at cursor position (depth 0)">
+                <keyboard-shortcut keymap="$default" first-keystroke="control alt shift C"/>
+            </action>
+        </group>
+    </actions>
+</idea-plugin>
