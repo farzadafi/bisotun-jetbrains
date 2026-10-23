@@ -1,3 +1,6 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.tasks.PatchPluginXmlTask
+
 plugins {
     id("java")
     kotlin("jvm") version "1.9.24"
@@ -5,7 +8,7 @@ plugins {
 }
 
 group = "ir.farzadafi"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -19,7 +22,21 @@ dependencies {
         intellijIdeaCommunity("2024.1.4")
         bundledPlugin("com.intellij.java")
         instrumentationTools()
+        pluginVerifier()
     }
+}
+
+intellijPlatform {
+    pluginVerification {
+        ides {
+            ide(IntelliJPlatformType.IntellijIdeaCommunity, "2024.1.4")
+            recommended()
+        }
+    }
+}
+
+tasks.named<PatchPluginXmlTask>("patchPluginXml") {
+    untilBuild.set(provider { null })
 }
 
 kotlin {
