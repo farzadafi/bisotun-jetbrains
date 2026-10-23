@@ -300,6 +300,10 @@ class ExtractFlowAction : AnAction() {
         return null
     }
 
+    override fun getActionUpdateThread(): com.intellij.openapi.actionSystem.ActionUpdateThread {
+        return com.intellij.openapi.actionSystem.ActionUpdateThread.BGT
+    }
+
     override fun update(e: AnActionEvent) {
         val psiFile = e.getData(CommonDataKeys.PSI_FILE)
         val editor = e.getData(CommonDataKeys.EDITOR)
