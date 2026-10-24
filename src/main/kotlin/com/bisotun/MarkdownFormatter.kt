@@ -1,10 +1,11 @@
 package com.bisotun
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.editor.Document
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiDocumentManager
 import kotlin.math.roundToLong
 
 class MarkdownFormatter(private val project: Project) {
@@ -12,46 +13,47 @@ class MarkdownFormatter(private val project: Project) {
     fun format(
         rootMethod: PsiMethod,
         nodes: List<PsiElement>,
-        models: List<PsiElement>
+        models: List<PsiElement>,
+        includeModels: Boolean = true
     ): String {
         val q = '`'
         val sb = StringBuilder()
 
         sb.appendLine("# Context Flow Extracted by Bisotun")
         sb.appendLine("- Extracted Nodes: ${nodes.size}")
-        sb.appendLine("- Extracted Models: ${models.size}")
+        sb.appendLine("- Extracted Models: ${if (includeModels) models.size else 0}")
 
         val totalChars =
             nodes.sumOf { it.textLength } +
-            models.sumOf { it.textLength }
+            (if (includeModels) models.sumOf { it.textLength } else 0)
         val estimatedTokens = (totalChars / 4.0).roundToLong()
         sb.appendLine("- Estimated Tokens: ~$estimatedTokens")
         sb.appendLine()
 
         // Root Method
         sb.appendLine("## Root Method")
-        appendElementBlock(sb, rootMethod, q)
+        appendElementBlock(sb, rootMethod, q, includeModels)
 
         // Execution Dependencies
         if (nodes.isNotEmpty()) {
             sb.appendLine("## Execution Dependencies")
             for (node in nodes) {
-                appendElementBlock(sb, node, q)
+                appendElementBlock(sb, node, q, includeModels)
             }
         }
 
-        // Related Models / DTOs
-        if (models.isNotEmpty()) {
+        // Related Models / DTOs - only if includeModels is true
+        if (includeModels && models.isNotEmpty()) {
             sb.appendLine("## Related Data Models (DTOs / Projections / Records)")
             for (model in models) {
-                appendElementBlock(sb, model, q)
+                appendElementBlock(sb, model, q, includeModels)
             }
         }
 
         return sb.toString()
     }
 
-    private fun appendElementBlock(sb: StringBuilder, element: PsiElement, q: Char) {
+    private fun appendElementBlock(sb: StringBuilder, element: PsiElement, q: Char, includeModels: Boolean) {
         val title = getElementTitle(element)
         val fileInfo = getFileInfo(element)
         val (startLine, endLine) = getLineRange(element)
@@ -95,22 +97,18 @@ class MarkdownFormatter(private val project: Project) {
 
     private fun getLineRange(element: PsiElement): Pair<Int, Int> {
         val psiFile = element.containingFile ?: return Pair(1, 1)
-        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
-            ?: return Pair(1, 1)
+        val document: Document? = PsiDocumentManager.getInstance(project).getDocument(psiFile)
+        if (document == null) return Pair(1, 1)
 
         val docLen = document.textLength
         if (docLen == 0) return Pair(1, 1)
 
-        val range = element.textRange ?: return Pair(1, 1)
+        val range = element.textRange
         val safeStart = range.startOffset.coerceIn(0, docLen)
         val safeEnd = range.endOffset.coerceIn(0, docLen)
 
         val startLine = document.getLineNumber(safeStart) + 1
         val endLine = document.getLineNumber(safeEnd) + 1
         return Pair(startLine, endLine)
-    }
-
-    private fun estimateTokens(nodeCount: Int, modelCount: Int): Int {
-        return (nodeCount * 50) + (modelCount * 40)
     }
 }
