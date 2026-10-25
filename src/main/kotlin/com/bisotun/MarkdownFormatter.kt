@@ -16,71 +16,121 @@ class MarkdownFormatter(private val project: Project) {
         models: List<PsiElement>,
         includeModels: Boolean = true
     ): String {
-        val q = '`'
         val sb = StringBuilder()
 
-        sb.appendLine("# Context Flow Extracted by Bisotun")
-        sb.appendLine("- Extracted Nodes: ${nodes.size}")
-        sb.appendLine("- Extracted Models: ${if (includeModels) models.size else 0}")
-
-        val totalChars =
-            nodes.sumOf { it.textLength } +
-            (if (includeModels) models.sumOf { it.textLength } else 0)
-        val estimatedTokens = (totalChars / 4.0).roundToLong()
-        sb.appendLine("- Estimated Tokens: ~$estimatedTokens")
+        sb.appendLine("# Flow Extracted by Bisotun")
+        sb.appendLine()
+        sb.appendLine("**Configuration:** maxDepth=${if (nodes.isNotEmpty()) ">0" else "0"}, includeModels=$includeModels")
         sb.appendLine()
 
-        // Root Method
-        sb.appendLine("## Root Method")
-        appendElementBlock(sb, rootMethod, q, includeModels)
+        // Execution Flow Summary
+        sb.appendLine("## Execution Flow Summary")
+        sb.appendLine()
+        
+        val allMethods = mutableListOf<PsiMethod>()
+        allMethods.add(rootMethod)
+        nodes.filterIsInstance<PsiMethod>().forEach { allMethods.add(it) }
+        
+        // Deduplicate methods by qualified signature
+        val uniqueMethods = mutableMapOf<String, PsiMethod>()
+        allMethods.forEach { method ->
+            val signature = getMethodSignature(method)
+            uniqueMethods[signature] = method
+        }
+        
+        uniqueMethods.values.forEachIndexed { index, method ->
+            sb.appendLine("${index + 1}. `${getMethodSignature(method)}`")
+        }
+        
+        sb.appendLine()
 
-        // Execution Dependencies
-        if (nodes.isNotEmpty()) {
-            sb.appendLine("## Execution Dependencies")
-            for (node in nodes) {
-                appendElementBlock(sb, node, q, includeModels)
+        // Method Source Code & Implementations
+        if (uniqueMethods.isNotEmpty()) {
+            sb.appendLine("## Method Source Code & Implementations")
+            sb.appendLine()
+            
+            uniqueMethods.values.forEachIndexed { index, method ->
+                sb.appendLine("### ${index + 1}. `${getMethodSignature(method)}`")
+                
+                val fileInfo = getFileInfo(method)
+                if (fileInfo.isNotEmpty()) {
+                    sb.appendLine("- File: `$fileInfo`")
+                }
+                
+                val (startLine, endLine) = getLineRange(method)
+                sb.appendLine("- Lines: $startLine-$endLine")
+                sb.appendLine()
+                
+                val code = method.text?.trim() ?: ""
+                val lang = determineLanguage(method)
+                sb.appendLine("```$lang")
+                sb.appendLine(code)
+                sb.appendLine("```")
+                sb.appendLine()
             }
         }
 
-        // Related Models / DTOs - only if includeModels is true
+        // Related Data Models & Entities (only when includeModels = true)
         if (includeModels && models.isNotEmpty()) {
-            sb.appendLine("## Related Data Models (DTOs / Projections / Records)")
-            for (model in models) {
-                appendElementBlock(sb, model, q, includeModels)
+            sb.appendLine("## Related Data Models & Entities")
+            sb.appendLine()
+            
+            // Deduplicate models
+            val uniqueModels = mutableMapOf<String, PsiElement>()
+            models.forEach { model ->
+                val name = when (model) {
+                    is PsiClass -> model.qualifiedName ?: model.name ?: "Unknown"
+                    else -> model.toString()
+                }
+                uniqueModels[name] = model
+            }
+            
+            uniqueModels.values.forEachIndexed { index, model ->
+                val modelName = when (model) {
+                    is PsiClass -> model.qualifiedName ?: model.name ?: "UnknownClass"
+                    else -> model.toString()
+                }
+                
+                sb.appendLine("### ${index + 1}. `$modelName`")
+                
+                val fileInfo = getFileInfo(model)
+                if (fileInfo.isNotEmpty()) {
+                    sb.appendLine("- File: `$fileInfo`")
+                }
+                
+                val (startLine, endLine) = getLineRange(model)
+                sb.appendLine("- Lines: $startLine-$endLine")
+                sb.appendLine()
+                
+                val code = model.text?.trim() ?: ""
+                val lang = determineLanguage(model)
+                sb.appendLine("```$lang")
+                sb.appendLine(code)
+                sb.appendLine("```")
+                sb.appendLine()
             }
         }
 
         return sb.toString()
     }
 
-    private fun appendElementBlock(sb: StringBuilder, element: PsiElement, q: Char, includeModels: Boolean) {
-        val title = getElementTitle(element)
-        val fileInfo = getFileInfo(element)
-        val (startLine, endLine) = getLineRange(element)
-
-        sb.appendLine("### $q$title$q")
-        if (fileInfo.isNotEmpty()) {
-            sb.appendLine("- File: $q$fileInfo$q")
+    private fun getMethodSignature(method: PsiMethod): String {
+        val className = method.containingClass?.qualifiedName ?: method.containingClass?.name ?: "Unknown"
+        val methodName = method.name ?: "Unknown"
+        val params = method.parameterList.parameters.joinToString(", ") { param ->
+            "${param.type?.presentableText ?: "?"} ${param.name ?: ""}"
         }
-        sb.appendLine("- Lines: $startLine-$endLine")
-        sb.appendLine()
-
-        val text = element.text?.trim() ?: ""
-        val lang = if (element.containingFile?.name?.endsWith(".kt") == true) "kotlin" else "java"
-        sb.appendLine("$q$q$q$lang")
-        sb.appendLine(text)
-        sb.appendLine("$q$q$q")
-        sb.appendLine()
+        return "$className.$methodName($params)"
     }
 
-    private fun getElementTitle(element: PsiElement): String {
-        return when (element) {
-            is PsiMethod -> {
-                val clsName = element.containingClass?.qualifiedName ?: element.containingClass?.name ?: "Unknown"
-                "$clsName#${element.name}"
-            }
-            is PsiClass -> element.qualifiedName ?: element.name ?: "UnknownClass"
-            else -> element.toString()
+    private fun determineLanguage(element: PsiElement): String {
+        val fileName = element.containingFile?.name?.lowercase() ?: ""
+        return when {
+            fileName.endsWith(".kt") -> "kotlin"
+            fileName.endsWith(".java") -> "java"
+            fileName.endsWith(".ts") || fileName.endsWith(".tsx") -> "typescript"
+            fileName.endsWith(".js") || fileName.endsWith(".jsx") -> "javascript"
+            else -> "java" // default
         }
     }
 
