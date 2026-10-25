@@ -33,35 +33,20 @@ class CopyDeepFlowAction : ExtractFlowActionBase(
             return
         }
 
-        val methodName = ReadAction.compute<String, Exception> {
+        val rootMethod = ReadAction.compute<PsiMethod, Exception> {
             psiFile.findElementAt(editor.caretModel.offset)
                 ?.let { PsiTreeUtil.getParentOfType(it, PsiMethod::class.java) }
-                ?.name ?: "Unknown Method"
         }
 
-        val markdown = buildString {
-            appendLine("## Deep Flow Extracted by Bisotun")
-            appendLine("**Configuration:** maxDepth=4, includeModels=true")
-            appendLine("- Extracted Nodes: ${nodes.size}")
-            appendLine("- Extracted Models: ${models.size}")
-            appendLine()
-            appendLine("### Root Method")
-            appendLine("- Method: `$methodName`")
-            appendLine()
-            if (nodes.isNotEmpty()) {
-                appendLine("### Execution Flow")
-                nodes.take(10).forEachIndexed { index, node ->
-                    if (node is PsiMethod) {
-                        appendLine("${index + 1}. `${node.containingClass?.name}.${node.name}()`")
-                    }
-                }
-                if (nodes.size > 10) {
-                    appendLine("... and ${nodes.size - 10} more methods")
-                }
-            }
+        if (rootMethod == null) {
+            showWarningNotification(project, "No method found at cursor position.")
+            return
         }
+
+        val formatter = MarkdownFormatter(project)
+        val markdown = formatter.format(rootMethod, nodes, models, includeModels = true)
 
         copyToClip(markdown)
-        showMessage(project, "Deep flow extracted: ${nodes.size} nodes, ${models.size} models", "Copy Deep Flow")
+        showMessage(project, "Deep flow with ${nodes.size} methods and ${models.size} models copied to clipboard", "Copy Deep Flow")
     }
 }
