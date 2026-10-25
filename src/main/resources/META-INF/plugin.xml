@@ -2,64 +2,46 @@
     <id>com.bisotun.flowextractor</id>
     <name>Bisotun Flow Extractor</name>
     <version>1.0.1</version>
-    <vendor email="farzadafi50@gmail.com" url="https://farzadafi.ir">Bisotun</vendor>
+    <vendor>Bisotun</vendor>
 
-    <description><![CDATA[
-      <h3>Bisotun Flow Extractor</h3>
-      <p>Automate execution call flow extraction and related data model resolution for LLM context, documentation, and architectural analysis.</p>
-      
-      <h4>Key Features:</h4>
-      <ul>
-        <li><b>Multi-language Support:</b> Full support for Java, JavaScript, TypeScript, React JSX, and React TSX.</li>
-        <li><b>Deep Execution Tracing:</b> Traverses method calls across layers (controllers, services, repositories, and UI handlers).</li>
-        <li><b>Data Model Discovery:</b> Extracts referenced DTOs, records, interfaces, and types across workspace files.</li>
-        <li><b>Clipboard Ready:</b> Formats complete context with token counts directly into clean Markdown.</li>
-      </ul>
-    ]]></description>
-
-    <change-notes><![CDATA[
-      <h4>1.0.0</h4>
-      <ul>
-        <li>Initial release with full Java, JS, TS, JSX, and TSX call flow extraction.</li>
-        <li>Support for cross-file model resolution and ESM imports.</li>
-        <li>Optimized linear parsing preventing UI freeze on large files.</li>
-      </ul>
-    ]]></change-notes>
-
-    <!-- Base platform dependencies -->
-    <idea-version since-build="241" />
     <depends>com.intellij.modules.platform</depends>
-    <depends optional="true" config-file="bisotun-java.xml">com.intellij.modules.java</depends>
-    <depends optional="true" config-file="bisotun-js.xml">JavaScript</depends>
+    <depends>com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij" />
-
+    
     <actions>
-        <group id="Bisotun.ActionGroup" text="Bisotun Flow Extractor" popup="true" compact="false">
-            <add-to-group group-id="EditorPopupMenu" anchor="last" />
-
-            <action id="ExtractFlowAction" class="com.bisotun.ExtractFlowAction"
-                text="Extract Flow"
-                description="Extract deep execution call flow and data models">
-                <keyboard-shortcut keymap="$default" first-keystroke="control alt shift F" />
+        <group id="BisotunActionGroup" 
+               popup="true" 
+               text="Bisotun Flow Extractor"
+               description="Extract execution call flows and data models">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            
+            <action id="CopyDeepFlowAction" 
+                    class="com.bisotun.CopyDeepFlowAction"
+                    text="Copy Deep Flow"
+                    description="Extract deep execution call flow and data models to clipboard">
+                <keyboard-shortcut first-keystroke="ctrl alt shift D" keymap="$default"/>
             </action>
 
-            <action id="CopyDeepFlowAction" class="com.bisotun.ExtractFlowAction"
-                text="Copy Deep Flow"
-                description="Extract deep execution call flow and data models (depth 4)">
-                <keyboard-shortcut keymap="$default" first-keystroke="control alt shift D" />
+            <action id="CopyShallowFlowAction" 
+                    class="com.bisotun.CopyShallowFlowAction"
+                    text="Copy Shallow Flow"
+                    description="Extract shallow execution call flow and data models to clipboard">
+                <keyboard-shortcut first-keystroke="ctrl alt shift S" keymap="$default"/>
             </action>
 
-            <action id="CopyShallowFlowAction" class="com.bisotun.ExtractFlowAction"
-                text="Copy Shallow Flow"
-                description="Extract shallow execution call flow (1 level depth)">
-                <keyboard-shortcut keymap="$default" first-keystroke="control alt shift S" />
+            <action id="CopyShallowFlowWithoutModelAction" 
+                    class="com.bisotun.CopyShallowFlowWithoutModelAction"
+                    text="Copy Shallow Flow (No Models)"
+                    description="Extract shallow execution call flow without data models to clipboard">
+                <keyboard-shortcut first-keystroke="ctrl alt shift M" keymap="$default"/>
             </action>
 
-            <action id="CopyCodeOnlyAction" class="com.bisotun.ExtractFlowAction"
-                text="Copy Code Only"
-                description="Extract code only at cursor position (depth 0)">
-                <keyboard-shortcut keymap="$default" first-keystroke="control alt shift C" />
+            <action id="CopyMethodOnlyAction" 
+                    class="com.bisotun.CopyMethodOnlyAction"
+                    text="Copy Method Only"
+                    description="Extract only the current method/code at cursor position">
+                <keyboard-shortcut first-keystroke="ctrl alt shift C" keymap="$default"/>
             </action>
         </group>
     </actions>
