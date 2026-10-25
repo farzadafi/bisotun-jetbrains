@@ -27,34 +27,20 @@ class CopyMethodOnlyAction : ExtractFlowActionBase(
         }
 
         // For maxDepth=0, we only get the root method without crawling
-        val methodPair = ReadAction.compute<Pair<String, String>?, Exception> {
+        val rootMethod = ReadAction.compute<PsiMethod?, Exception> {
             psiFile.findElementAt(editor.caretModel.offset)
                 ?.let { PsiTreeUtil.getParentOfType(it, PsiMethod::class.java) }
-                ?.let { method ->
-                    Pair(method.name ?: "Unknown", method.text ?: "")
-                }
         }
 
-        if (methodPair == null) {
+        if (rootMethod == null) {
             showWarningNotification(project, "No method found at cursor position.")
             return
         }
 
-        val (name, code) = methodPair
-
-        val markdown = buildString {
-            appendLine("## Method Extracted by Bisotun")
-            appendLine("**Configuration:** maxDepth=0, includeModels=false")
-            appendLine("- Method: `$name`")
-            appendLine("- Recursion: None (only the method at cursor)")
-            appendLine()
-            appendLine("### Method Code")
-            appendLine("```java")
-            appendLine(code.toString())
-            appendLine("```")
-        }
+        val formatter = MarkdownFormatter(project)
+        val markdown = formatter.format(rootMethod, emptyList(), emptyList(), includeModels = false)
 
         copyToClip(markdown)
-        showMessage(project, "Method `$name` copied to clipboard", "Copy Method Only")
+        showMessage(project, "Method `${rootMethod.name}` copied to clipboard", "Copy Method Only")
     }
 }
