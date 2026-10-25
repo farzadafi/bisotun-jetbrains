@@ -33,32 +33,20 @@ class CopyShallowFlowAction : ExtractFlowActionBase(
             return
         }
 
-        val methodName = ReadAction.compute<String, Exception> {
+        val rootMethod = ReadAction.compute<PsiMethod, Exception> {
             psiFile.findElementAt(editor.caretModel.offset)
                 ?.let { PsiTreeUtil.getParentOfType(it, PsiMethod::class.java) }
-                ?.name ?: "Unknown Method"
         }
 
-        val markdown = buildString {
-            appendLine("## Shallow Flow Extracted by Bisotun")
-            appendLine("**Configuration:** maxDepth=1, includeModels=true")
-            appendLine("- Extracted Nodes: ${nodes.size}")
-            appendLine("- Extracted Models: ${models.size}")
-            appendLine()
-            appendLine("### Root Method")
-            appendLine("- Method: `$methodName`")
-            appendLine()
-            if (nodes.isNotEmpty()) {
-                appendLine("### Direct Calls")
-                nodes.forEachIndexed { index, node ->
-                    if (node is PsiMethod) {
-                        appendLine("${index + 1}. `${node.containingClass?.name}.${node.name}()`")
-                    }
-                }
-            }
+        if (rootMethod == null) {
+            showWarningNotification(project, "No method found at cursor position.")
+            return
         }
+
+        val formatter = MarkdownFormatter(project)
+        val markdown = formatter.format(rootMethod, nodes, models, includeModels = true)
 
         copyToClip(markdown)
-        showMessage(project, "Shallow flow extracted: ${nodes.size} nodes, ${models.size} models", "Copy Shallow Flow")
+        showMessage(project, "Shallow flow with ${nodes.size} methods and ${models.size} models copied to clipboard", "Copy Shallow Flow")
     }
 }
