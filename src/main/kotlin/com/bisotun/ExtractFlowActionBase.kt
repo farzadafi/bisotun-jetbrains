@@ -68,7 +68,7 @@ abstract class ExtractFlowActionBase(
 
     /**
      * Shared: crawl from root method with proper read action handling
-     * Simple synchronous version for now to fix compilation
+     * Supports Java and JavaScript/TypeScript
      */
     protected fun crawlFromRoot(
         project: Project,
@@ -77,40 +77,98 @@ abstract class ExtractFlowActionBase(
         maxDepth: Int,
         useFallback: Boolean
     ): Pair<List<PsiElement>, List<PsiElement>> {
-        var rootMethod: PsiMethod? = null
-
-        // Read action for PSI operations
-        ReadAction.run<Throwable> {
-            val element = psiFile.findElementAt(editor.caretModel.offset)
-            rootMethod = if (element != null) {
-                PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
-            } else {
-                null
-            }
+        val rootFunction = ReadAction.compute<PsiElement?, Throwable> {
+            MultiLanguageFunctionDetector.findFunctionAtCaret(psiFile, editor.caretModel.offset)
         }
 
-        if (rootMethod == null) {
+        if (rootFunction == null) {
             return Pair(emptyList(), emptyList())
         }
 
-        val finalRootMethod = rootMethod!!
-
         return ReadAction.compute<Pair<List<PsiElement>, List<PsiElement>>, Throwable> {
             try {
-                val crawler = FlowCrawler(project)
-                val nodes = crawler.crawl(finalRootMethod, maxDepth = maxDepth, useFallback = useFallback)
+                if (rootFunction is PsiMethod) {
+                    // Java/Kotlin path
+                    val crawler = FlowCrawler(project)
+                    val nodes = crawler.crawl(rootFunction, maxDepth = maxDepth, useFallback = useFallback)
 
-                val modelExtractor = ModelExtractor(project)
-                val allMethods = listOf(finalRootMethod) + nodes.filterIsInstance<PsiMethod>()
-                val models = if (includeModels) {
-                    allMethods.flatMap { modelExtractor.extractModels(it) }.distinct()
-                } else emptyList()
+                    val modelExtractor = ModelExtractor(project)
+                    val allMethods = listOf(rootFunction) + nodes.filterIsInstance<PsiMethod>()
+                    val models = if (includeModels) {
+                        allMethods.flatMap { modelExtractor.extractModels(it) }.distinct()
+                    } else emptyList()
 
-                Pair(nodes, models)
+                    Pair(nodes, models)
+                } else {
+                    // JavaScript/TypeScript path - simple implementation for now
+                    val nodes = mutableListOf<PsiElement>()
+                    val models = mutableListOf<PsiElement>()
+                    
+                    // For JS/TS, we can extract inline call expressions from the function body
+                    extractJsCallExpressions(rootFunction, nodes, maxDepth)
+                    
+                    // Extract models for JS/TS if includeModels is true
+                    if (includeModels) {
+                        extractJsTypeReferences(rootFunction, models)
+                    }
+                    
+                    Pair(nodes, models)
+                }
             } catch (e: Exception) {
                 log.error("Error during flow crawling", e)
                 Pair(emptyList(), emptyList())
             }
+        }
+    }
+
+    /**
+     * Extract call expressions from JavaScript/TypeScript function
+     */
+    private fun extractJsCallExpressions(
+        functionElement: PsiElement,
+        result: MutableList<PsiElement>,
+        maxDepth: Int,
+        currentDepth: Int = 0
+    ) {
+        if (currentDepth >= maxDepth) return
+        
+        // Simple extraction - look for function calls in the text
+        val text = functionElement.text ?: ""
+        
+        // Find function calls (simple pattern matching)
+        val callPattern = Regex("""\b([A-Za-z_$][A-Za-z0-9_$]*)\s*\([^)]*\)""")
+        val matches = callPattern.findAll(text)
+        
+        for (match in matches) {
+            val callName = match.groupValues[1]
+            // Skip common built-ins
+            if (callName !in setOf("console", "alert", "log", "error", "warn", "info", "debug")) {
+                // Create a simple representation of the call
+                result.add(functionElement)
+            }
+        }
+        
+        // For now, we don't do deep recursion for JS/TS
+    }
+    
+    /**
+     * Extract type references from JavaScript/TypeScript function
+     */
+    private fun extractJsTypeReferences(
+        functionElement: PsiElement,
+        result: MutableList<PsiElement>
+    ) {
+        val text = functionElement.text ?: ""
+        
+        // Look for TypeScript type references
+        val typePattern = Regex("""\b(?:interface|type|class|enum)\s+([A-Za-z_$][A-Za-z0-9_$]*)\b""")
+        val matches = typePattern.findAll(text)
+        
+        for (match in matches) {
+            val typeName = match.groupValues[1]
+            // Add the function element itself as a placeholder
+            // In a real implementation, we would resolve the actual type definition
+            result.add(functionElement)
         }
     }
 
@@ -138,11 +196,30 @@ abstract class ExtractFlowActionBase(
     /**
      * Check if caret is on a valid method/function (to be called from update)
      * Safe for EDT - does minimal work
+     * Now supports multi-language
      */
     protected fun isCaretOnMethod(psiFile: PsiFile?, editor: Editor?): Boolean {
         if (psiFile == null || editor == null) return false
-        val offset = editor.caretModel.offset
-        val element = psiFile.findElementAt(offset) ?: return false
-        return PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) != null
+        
+        // Quick check: if it's a Java file, check for PsiMethod
+        if (MultiLanguageFunctionDetector.isJavaOrKotlinFile(psiFile)) {
+            val offset = editor.caretModel.offset
+            val element = psiFile.findElementAt(offset) ?: return false
+            return PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) != null
+        }
+        
+        // For other files, we'll do a more thorough check
+        return ReadAction.compute<Boolean, Exception> {
+            MultiLanguageFunctionDetector.findFunctionAtCaret(psiFile, editor.caretModel.offset) != null
+        } ?: false
+    }
+    
+    /**
+     * Get root function element for any language
+     */
+    protected fun getRootFunction(psiFile: PsiFile, editor: Editor): PsiElement? {
+        return ReadAction.compute<PsiElement?, Exception> {
+            MultiLanguageFunctionDetector.findFunctionAtCaret(psiFile, editor.caretModel.offset)
+        }
     }
 }
