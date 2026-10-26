@@ -11,7 +11,7 @@ import kotlin.math.roundToLong
 class MarkdownFormatter(private val project: Project) {
 
     fun format(
-        rootMethod: PsiMethod,
+        rootElement: PsiElement,
         nodes: List<PsiElement>,
         models: List<PsiElement>,
         includeModels: Boolean = true
@@ -24,45 +24,60 @@ class MarkdownFormatter(private val project: Project) {
         sb.appendLine()
 
         // Execution Flow Summary
-        sb.appendLine("## Execution Flow Summary")
-        sb.appendLine()
-        
-        val allMethods = mutableListOf<PsiMethod>()
-        allMethods.add(rootMethod)
-        nodes.filterIsInstance<PsiMethod>().forEach { allMethods.add(it) }
-        
-        // Deduplicate methods by qualified signature
-        val uniqueMethods = mutableMapOf<String, PsiMethod>()
-        allMethods.forEach { method ->
-            val signature = getMethodSignature(method)
-            uniqueMethods[signature] = method
-        }
-        
-        uniqueMethods.values.forEachIndexed { index, method ->
-            sb.appendLine("${index + 1}. `${getMethodSignature(method)}`")
-        }
-        
-        sb.appendLine()
-
-        // Method Source Code & Implementations
-        if (uniqueMethods.isNotEmpty()) {
-            sb.appendLine("## Method Source Code & Implementations")
+        if (nodes.isNotEmpty()) {
+            sb.appendLine("## Execution Flow Summary")
             sb.appendLine()
             
-            uniqueMethods.values.forEachIndexed { index, method ->
-                sb.appendLine("### ${index + 1}. `${getMethodSignature(method)}`")
+            val allElements = mutableListOf<PsiElement>()
+            allElements.add(rootElement)
+            allElements.addAll(nodes)
+            
+            // Deduplicate by signature
+            val uniqueElements = mutableMapOf<String, PsiElement>()
+            allElements.forEach { element ->
+                val signature = getElementSignature(element)
+                uniqueElements[signature] = element
+            }
+            
+            uniqueElements.values.forEachIndexed { index, element ->
+                sb.appendLine("${index + 1}. `${getElementSignature(element)}`")
+            }
+            
+            sb.appendLine()
+        }
+
+        // Method/Function Source Code & Implementations
+        val allElementsToShow = mutableListOf<PsiElement>()
+        allElementsToShow.add(rootElement)
+        if (nodes.isNotEmpty()) {
+            allElementsToShow.addAll(nodes)
+        }
+        
+        if (allElementsToShow.isNotEmpty()) {
+            sb.appendLine("## Source Code & Implementations")
+            sb.appendLine()
+            
+            // Deduplicate
+            val uniqueElements = mutableMapOf<String, PsiElement>()
+            allElementsToShow.forEach { element ->
+                val signature = getElementSignature(element)
+                uniqueElements[signature] = element
+            }
+            
+            uniqueElements.values.forEachIndexed { index, element ->
+                sb.appendLine("### ${index + 1}. `${getElementSignature(element)}`")
                 
-                val fileInfo = getFileInfo(method)
+                val fileInfo = getFileInfo(element)
                 if (fileInfo.isNotEmpty()) {
                     sb.appendLine("- File: `$fileInfo`")
                 }
                 
-                val (startLine, endLine) = getLineRange(method)
+                val (startLine, endLine) = getLineRange(element)
                 sb.appendLine("- Lines: $startLine-$endLine")
                 sb.appendLine()
                 
-                val code = method.text?.trim() ?: ""
-                val lang = determineLanguage(method)
+                val code = element.text?.trim() ?: ""
+                val lang = determineLanguage(element)
                 sb.appendLine("```$lang")
                 sb.appendLine(code)
                 sb.appendLine("```")
@@ -114,13 +129,21 @@ class MarkdownFormatter(private val project: Project) {
         return sb.toString()
     }
 
-    private fun getMethodSignature(method: PsiMethod): String {
-        val className = method.containingClass?.qualifiedName ?: method.containingClass?.name ?: "Unknown"
-        val methodName = method.name ?: "Unknown"
-        val params = method.parameterList.parameters.joinToString(", ") { param ->
-            "${param.type?.presentableText ?: "?"} ${param.name ?: ""}"
+    private fun getElementSignature(element: PsiElement): String {
+        return when (element) {
+            is PsiMethod -> {
+                val className = element.containingClass?.qualifiedName ?: element.containingClass?.name ?: "Unknown"
+                val methodName = element.name ?: "Unknown"
+                val params = element.parameterList.parameters.joinToString(", ") { param ->
+                    "${param.type?.presentableText ?: "?"} ${param.name ?: ""}"
+                }
+                "$className.$methodName($params)"
+            }
+            else -> {
+                // For non-method elements, use the MultiLanguageFunctionDetector
+                MultiLanguageFunctionDetector.getFunctionSignature(element)
+            }
         }
-        return "$className.$methodName($params)"
     }
 
     private fun determineLanguage(element: PsiElement): String {
