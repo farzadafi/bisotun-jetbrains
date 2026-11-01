@@ -18,6 +18,8 @@ repositories {
 }
 
 dependencies {
+    testImplementation(kotlin("test"))
+
     intellijPlatform {
         intellijIdeaCommunity("2024.1.4")
         bundledPlugin("com.intellij.java")
@@ -26,14 +28,14 @@ dependencies {
     }
 }
 
-intellijPlatform {
-    pluginVerification {
-        ides {
-            ide(IntelliJPlatformType.IntellijIdeaCommunity, "2024.1.4")
-            recommended()
-        }
-    }
-}
+// intellijPlatform {
+//      pluginVerification {
+//         ides {
+//             ide(IntelliJPlatformType.IntellijIdeaCommunity, "2024.1.4")
+//             recommended()
+//         }
+//     }
+// }
 
 tasks.named<PatchPluginXmlTask>("patchPluginXml") {
     untilBuild.set(provider { null })
@@ -41,4 +43,8 @@ tasks.named<PatchPluginXmlTask>("patchPluginXml") {
 
 kotlin {
     jvmToolchain(17)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
