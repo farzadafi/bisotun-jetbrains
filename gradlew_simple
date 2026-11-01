@@ -1,0 +1,3 @@
+#!/bin/bash
+# Simple gradle wrapper fallback
+java -cp "$HOME/.gradle/wrapper/dists/*/*/gradle-*/lib/*" org.gradle.wrapper.GradleWrapperMain "$@"
