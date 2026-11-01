@@ -1,47 +1,54 @@
 <idea-plugin>
     <id>com.bisotun.flowextractor</id>
     <name>Bisotun Flow Extractor</name>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <vendor>Bisotun</vendor>
+    <change-notes><![CDATA[
+        <h3>1.0.2</h3>
+        <ul>
+            <li>Added full flow extraction support for JS, JSX, TS, and TSX files in IntelliJ Community.</li>
+            <li>Refactored architecture into a unified dispatcher strategy for improved stability.</li>
+        </ul>
+    ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij" />
-    
+
     <actions>
-        <group id="BisotunActionGroup" 
-               popup="true" 
-               text="Bisotun Flow Extractor"
-               description="Extract execution call flows and data models">
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-            
-            <action id="CopyDeepFlowAction" 
-                    class="com.bisotun.CopyDeepFlowAction"
-                    text="Copy Deep Flow"
-                    description="Extract deep execution call flow and data models to clipboard">
-                <keyboard-shortcut first-keystroke="ctrl alt shift D" keymap="$default"/>
+        <group id="BisotunActionGroup"
+            popup="true"
+            text="Bisotun Flow Extractor"
+            description="Extract execution call flows and data models">
+            <add-to-group group-id="EditorPopupMenu" anchor="last" />
+
+            <action id="CopyDeepFlowAction"
+                class="com.bisotun.CopyDeepFlowAction"
+                text="Copy Deep Flow"
+                description="Extract deep execution call flow and data models to clipboard">
+                <keyboard-shortcut first-keystroke="ctrl alt shift D" keymap="$default" />
             </action>
 
-            <action id="CopyShallowFlowAction" 
-                    class="com.bisotun.CopyShallowFlowAction"
-                    text="Copy Shallow Flow"
-                    description="Extract shallow execution call flow and data models to clipboard">
-                <keyboard-shortcut first-keystroke="ctrl alt shift S" keymap="$default"/>
+            <action id="CopyShallowFlowAction"
+                class="com.bisotun.CopyShallowFlowAction"
+                text="Copy Shallow Flow"
+                description="Extract shallow execution call flow and data models to clipboard">
+                <keyboard-shortcut first-keystroke="ctrl alt shift S" keymap="$default" />
             </action>
 
-            <action id="CopyShallowFlowWithoutModelAction" 
-                    class="com.bisotun.CopyShallowFlowWithoutModelAction"
-                    text="Copy Shallow Flow (No Models)"
-                    description="Extract shallow execution call flow without data models to clipboard">
-                <keyboard-shortcut first-keystroke="ctrl alt shift M" keymap="$default"/>
+            <action id="CopyShallowFlowWithoutModelAction"
+                class="com.bisotun.CopyShallowFlowWithoutModelAction"
+                text="Copy Shallow Flow (No Models)"
+                description="Extract shallow execution call flow without data models to clipboard">
+                <keyboard-shortcut first-keystroke="ctrl alt shift M" keymap="$default" />
             </action>
 
-            <action id="CopyMethodOnlyAction" 
-                    class="com.bisotun.CopyMethodOnlyAction"
-                    text="Copy Method Only"
-                    description="Extract only the current method/code at cursor position">
-                <keyboard-shortcut first-keystroke="ctrl alt shift C" keymap="$default"/>
+            <action id="CopyMethodOnlyAction"
+                class="com.bisotun.CopyMethodOnlyAction"
+                text="Copy Method Only"
+                description="Extract only the current method/code at cursor position">
+                <keyboard-shortcut first-keystroke="ctrl alt shift C" keymap="$default" />
             </action>
         </group>
     </actions>
