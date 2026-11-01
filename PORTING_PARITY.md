@@ -6,12 +6,12 @@ VS Code behavior is the reference; JetBrains implementation aims to match it.
 
 | Feature | VS Code Evidence | JetBrains Status | Implementation Note |
 |---|---|---|---|
-| **Language support** | Java, JavaScript, TypeScript, JSX, TSX (`package.json:15-21`) | Java only; no JS/TS/JSX/TSX strategies | JS/TS strategies created in `JavaScriptStrategy.kt`; JSX/TSX partial |
-| **Extraction commands** | `copyDeepFlow` (depth 4), `copyShallowFlow` (depth 1), `copyCodeOnly` (depth 0), `extractFlow` (default) (`extension.ts:84-97`) | Only `Extract Flow` action; no depth variants | Added `CopyDeepFlowAction`, `CopyShallowFlowAction`, `CopyCodeOnlyAction` in `plugin.xml` |
+| **Language support** | Java, JavaScript, TypeScript, JSX, TSX (`package.json:15-21`) | Java (PSI) plus JS/TS/JSX/TSX through one `JsTsFlowExtractor` | `JavaScriptStrategy.kt` was replaced by the single-strategy `LanguageFlowExtractor` design: `JsTsFlowExtractor` carries both paths - PSI references when the JavaScript plugin is present, tokenizer when it is absent |
+| **Extraction commands** | `copyDeepFlow` (depth 4), `copyShallowFlow` (depth 1), `copyCodeOnly` (depth 0), `extractFlow` (default) (`extension.ts:84-97`) | Four registered actions, all sharing one runner | `CopyDeepFlowAction`, `CopyShallowFlowAction`, `CopyShallowFlowWithoutModelAction`, `CopyMethodOnlyAction` in `plugin.xml` |
 | **maxDepth default** | 4 (`extension.ts:63`) | Hardcoded 5 (`FlowCrawler.kt:8`) | Updated `FlowCrawler.crawl()` to accept `maxDepth` parameter, default 4 |
 | **useFallback default** | true (`extension.ts:64`) | Not separated; always active | Added `useFallback` parameter to `crawl()`; default true |
 | **Root depth** | 0 (`flowCrawler.ts:194`) | 0 with hardcoded maxDepth 5 | Verified root depth = 0; depth bound now aligns with VS Code |
-| **Enclosing scope** | `vscode.executeDocumentSymbolProvider` (`languageStrategy.ts:41-94`) | `PsiTreeUtil.getParentOfType` (`ExtractFlowAction.kt:20`) | Java PSI works; JS/TS scope uses document symbols (created in `JavaScriptStrategy.kt`) |
+| **Enclosing scope** | `vscode.executeDocumentSymbolProvider` (`languageStrategy.ts:41-94`) | `PsiTreeUtil.getParentOfType` (Java) / outermost function range (JS/TS) (`JavaFlowExtractor.kt`, `JsTsFlowExtractor.kt`) | Java PSI works; JS/TS resolves the outermost function/component containing the caret, PSI method is never used as the gate for JS/TS files |
 | **Call resolution** | `prepareCallHierarchy` + `provideOutgoingCalls` (`flowCrawler.ts:117-156`) | PSI visitor + `DefinitionsScopedSearch` (`FlowCrawler.kt:37-86`) | Java: PSI-based call resolution works. JS/TS: PSI-based fallback calls implemented |
 | **Overloaded method resolution** | Call hierarchy handles overloads (`flowCrawler.ts:232-245`) | `DefinitionsScopedSearch` for interface impls (`FlowCrawler.kt:74-86`) | Verified; overload resolution matches reference behavior |
 | **Interface methods & impls** | Call hierarchy shows interface impls (`flowCrawler.ts:74-86`) | `DefinitionsScopedSearch` (`FlowCrawler.kt:74-86`) | Equivalent implementation |
@@ -27,8 +27,8 @@ VS Code behavior is the reference; JetBrains implementation aims to match it.
 | **Clipboard delivery** | `vscode.env.clipboard.writeText` (`extension.ts:74`) | `CopyPasteManager.getInstance().setContents` (`ExtractFlowAction.kt:38`) | Same platform API; compatible |
 | **Context menu actions** | Editor/context menu via `bisotun.submenu` (`package.json:52-92`) | Plugin.xml adds to `EditorPopupMenu` (`plugin.xml:16`) | Added `Copy Deep Flow`, `Copy Shallow Flow`, `Copy Code Only` actions |
 | **Java extraction chain** | controller -> service interface -> implementation -> repository -> mapper -> DTO/record/projection (`feature.txt:18`) | Same chain in `ModelExtractor.kt:64-81` + `FlowCrawler.kt` impl search | Java parity preserved |
-| **JS cross-file imports** | `parseImports`, `resolveRelativeImportUri`, `resolveFallbackCalls` (`javascriptStrategy.ts:582-667`) | Not implemented | Import resolution added in `JavaScriptStrategy.resolveImportedModelDefinition` (basic ESM support) |
-| **TS interfaces/type aliases** | `extractTypeCandidates` finds Uppercase type names (`javascriptStrategy.ts:84-100`) | Partially implemented | Type candidates extraction works for TS; full interface/alias resolution in progress |
+| **JS cross-file imports** | `parseImports`, `resolveRelativeImportUri`, `resolveFallbackCalls` (`javascriptStrategy.ts:582-667`) | Tier B: relative `./`/`../` imports, namespace imports and instance member calls resolved against imported class methods; Tier A: PSI reference resolution | Path aliases are not resolved; ambiguous or unknown calls stay `UNRESOLVED` |
+| **TS interfaces/type aliases** | `extractTypeCandidates` finds Uppercase type names (`javascriptStrategy.ts:84-100`) | Tier A only | Type declarations are reported as models only when a real PSI reference resolves to them |
 | **JSX/TSX component tags** | Dependency edges need inspection | Not implemented | Intrinsic tags (<div>) distinguished from project components; documentation pending |
 | **Intrinsic tags (<div> etc.)** | Distinguish from project components | Not implemented | Documented as: intrinsic tags do not create dependency edges; project components do |
 | **Custom hooks** | Import/call resolution would capture them | Not implemented | Marked as additional capability; not claimed as core feature |
@@ -38,7 +38,7 @@ VS Code behavior is the reference; JetBrains implementation aims to match it.
 
 ## Remaining Limitations (JetBrains -> VS Code)
 
-1. **JavaScript/TypeScript/JSX/TSX full support** - Java strategies work; JS/TS strategies are partial (basic type extraction and fallback call regexes implemented; full import resolution, document symbol-based scope, and LSP-style definition resolution need refinement).
+1. **JavaScript/TypeScript/JSX/TSX full support** - Java extraction is PSI/reference based and unchanged. JS/TS is best effort by design: Tier A (JavaScript plugin present) resolves through real PSI; Tier B (plugin absent) uses a bounded tokenizer and expands same-file declarations, relative/namespace imports and instance member calls whose target method exists in an imported class, marking everything else `UNRESOLVED`.
 
 2. **Token formula** - JSX/TSX code lengths and model code lengths may differ from Java; token estimation uses `round(totalChars / 4)` as confirmed in the original VS Code formatter.
 
@@ -58,15 +58,14 @@ VS Code behavior is the reference; JetBrains implementation aims to match it.
 - Cycle protection and bounded traversal: **Verified equivalent**
 - Markdown output structure and token formula: **Updated to match reference**
 - Clipboard feedback: **Verified equivalent**
-- New commands (Copy Deep/Shallow/Code Only): **Added to plugin.xml and action handlers**
+- New commands (Copy Deep/Shallow/Shallow without models/Method only): **Registered in plugin.xml, implemented by one shared action base**
 
 ## Changed Files (from base)
 
-- `build.gradle.kts` - Added `bundledPlugin("com.intellij.javaScript")`
-- `src/main/kotlin/com/bisotun/LanguageStrategy.kt` - New: common language strategy interface
-- `src/main/kotlin/com/bisotun/JavaStrategy.kt` - New: Java strategy implementing `LanguageStrategy`
-- `src/main/kotlin/com/bisotun/JavaScriptStrategy.kt` - New: JavaScript/TypeScript/JSX/TSX strategy
-- `src/main/kotlin/com/bisotun/ExtractFlowAction.kt` - New: action handler with depth/fallback params
-- `src/main/kotlin/com/bisotun/FlowCrawler.kt` - Updated: accepts `maxDepth` and `useFallback` params
-- `src/main/kotlin/com/bisotun/MarkdownFormatter.kt` - Updated: token formula matches `round(totalChars / 4)`
-- `src/main/resources/META-INF/plugin.xml` - New: additional context-menu actions with keyboard shortcuts
+- `src/main/kotlin/com/bisotun/domain/` - New: language agnostic `FlowNode` / `FlowResult` / `ResolutionStatus` / `NodeKind`
+- `src/main/kotlin/com/bisotun/language/` - New: `LanguageKind`, `LanguageKindDetector`, `LanguageFlowExtractor` (one strategy per language), `FlowExtractionDispatcher`, `PsiFlowNodes`, `JavaFlowExtractor`, `JsTsFlowExtractor`
+- `src/main/kotlin/com/bisotun/language/JsTsFlowExtractor.kt` - New: the whole JS/TS strategy in one file - PSI path (references, `render` expansion, real models) plus the bounded tokenizer path (`JsTokenizer`, `JsFileOutline`, `JsFileOutlineBuilder`, `FlowSource`, `JsCallResolver`, `JsBindingMatcher`, `AnalysisContext`) used when the JavaScript plugin is absent
+- `src/main/kotlin/com/bisotun/ExtractFlowActionBase.kt` - Rewritten: shared action (clipboard + feedback) that delegates to `FlowExtractionDispatcher`, configuration only
+- `src/main/kotlin/com/bisotun/MarkdownFormatter.kt` - Rewritten: pure `FlowResult` -> markdown renderer
+- `src/main/kotlin/com/bisotun/LanguageStrategy.kt`, `JavaStrategy.kt`, `JavaScriptStrategy.kt`, `MultiLanguageFunctionDetector.kt` - Deleted: replaced by the resolver/tier architecture (no regex, no synthetic PSI)
+- `src/main/resources/META-INF/plugin.xml` - Unchanged action ids; the JavaScript plugin is not declared as a dependency
