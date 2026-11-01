@@ -69,15 +69,17 @@ Create (or refactor into) packages like:
   - `FlowResult`, `FlowNode`, `FlowEdge`, `SymbolId`, `ResolutionStatus`
 - `com.bisotun.language.*`
   - `LanguageKind` (JAVA, KOTLIN, JS, TS, JSX, TSX, UNKNOWN)
-  - `LanguageResolver` interface
-  - `JavaResolver` (adapter over existing Java FlowCrawler)
-  - `KotlinResolver` (optional, minimal)
-  - `JsTsResolverTierA` (only used when JS plugin is available)
-  - `JsTsResolverTierB` (tokenizer-based fallback)
+  - `LanguageFlowExtractor` interface (one strategy per language, `isApplicable` + `extract`)
+  - `FlowExtractionDispatcher` (picks exactly one extractor per caret, never merges languages)
+  - `JavaFlowExtractor` (adapter over existing Java FlowCrawler / ModelExtractor)
+  - `JsTsFlowExtractor` (both tiers live here: PSI path when the JavaScript plugin is
+    available, tokenizer path when it is not)
+  - `PsiFlowNodes` / `LanguageKindDetector` / `LanguageKind` (shared platform helpers)
 - `com.bisotun.render.*`
-  - `MarkdownRenderer` (single entry point)
+  - `MarkdownRenderer` (single entry point); today `com.bisotun.MarkdownFormatter`
 - `com.bisotun.actions.*`
-  - Keep 4 actions but extract shared logic into one reusable runner/service.
+  - Keep 4 actions but extract shared logic into one reusable runner/service
+    (today `com.bisotun.ExtractFlowActionBase`).
 
 ## 6) Required behavior guarantees
 - Java output must remain at least as good as current.
