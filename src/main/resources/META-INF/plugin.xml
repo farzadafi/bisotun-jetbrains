@@ -4,7 +4,34 @@
     <version>1.0.2</version>
     <vendor>Bisotun</vendor>
     <description><![CDATA[
-        A powerful tool to extract execution call flows, nested method hierarchies, and related data models directly to your clipboard in Markdown format. Supports Java, JavaScript, and TypeScript (including JSX and TSX).
+        <h3>🚀 Instantly Extract Execution Call Flows & Data Models</h3>
+        <p>
+        <b>Bisotun Flow Extractor</b> automates code navigation by tracing and extracting nested execution call hierarchies and related data models directly to your clipboard in clean Markdown format—ideal for context injection into LLMs (ChatGPT, Claude, Ollama) or team documentation.
+        </p>
+
+        <h4>⛰️ Why "Bisotun"? The Philosophy Beneath the Name</h4>
+        <p>
+        The plugin is named after <b>Mount Bisotun</b>, a majestic peak located near Kermanshah, Iran, famous for holding the world's largest limestone cliff and the historic Bisotun Inscription—carved in three ancient cuneiform languages (Old Persian, Elamite, and Babylonian) by command of Darius the Great. 
+        </p>
+        <p>
+        Just as Mount Bisotun is structured in magnificent, enduring <b>geological layers</b>, complex software code is also built layer upon layer. <b>Bisotun Flow Extractor</b> dives deep through these architectural layers to unearth, decode, and document your call flows and data models with historical precision.
+        </p>
+
+        <h4>✨ Key Features:</h4>
+        <ul>
+          <li><b>Deep Flow Extraction:</b> Recursively crawls method execution call chains up to configurable depths.</li>
+          <li><b>Model Crawler:</b> Automatically extracts referenced DTOs, Entities, and Interfaces.</li>
+          <li><b>Multi-Language Support:</b> Seamless support for <b>Java</b>, <b>JavaScript</b>, and <b>TypeScript</b> (including React <b>JSX/TSX</b>), even in IntelliJ IDEA Community edition!</li>
+          <li><b>LLM-Optimized Markdown:</b> Generates structured markdown trees ready to be pasted into AI prompts.</li>
+        </ul>
+
+        <h4>⌨️ Shortcuts:</h4>
+        <ul>
+          <li><code>Ctrl + Alt + Shift + D</code> : Copy Deep Flow (Calls + Models)</li>
+          <li><code>Ctrl + Alt + Shift + S</code> : Copy Shallow Flow (Calls + Models)</li>
+          <li><code>Ctrl + Alt + Shift + M</code> : Copy Shallow Flow (No Models)</li>
+          <li><code>Ctrl + Alt + Shift + C</code> : Copy Method Only</li>
+        </ul>
     ]]></description>
 
     <change-notes><![CDATA[
