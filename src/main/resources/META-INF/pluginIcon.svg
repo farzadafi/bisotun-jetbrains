@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3A86FF" />
+      <stop offset="100%" stop-color="#8338EC" />
+    </linearGradient>
+    <!-- Flow Node Gradient -->
+    <linearGradient id="nodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF006E" />
+      <stop offset="100%" stop-color="#FB5607" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded App Box Background -->
+  <rect x="3" y="3" width="34" height="34" rx="8" ry="8" fill="url(#bgGrad)" />
+
+  <!-- Code / Flow Tree Graphics -->
+  <path d="M12 12 H16 M16 12 V28 M16 20 H22 M16 28 H22" 
+        stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.9" />
+
+  <!-- Flow Output / Model Extraction Node -->
+  <circle cx="26" cy="20" r="4" fill="url(#nodeGrad)" />
+  <circle cx="26" cy="12" r="2.5" fill="#FFBE0B" />
+  <circle cx="26" cy="28" r="2.5" fill="#3A86FF" />
+</svg>
