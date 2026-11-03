@@ -3,6 +3,10 @@
     <name>Bisotun Flow Extractor</name>
     <version>1.0.2</version>
     <vendor>Bisotun</vendor>
+    <description><![CDATA[
+        A powerful tool to extract execution call flows, nested method hierarchies, and related data models directly to your clipboard in Markdown format. Supports Java, JavaScript, and TypeScript (including JSX and TSX).
+    ]]></description>
+
     <change-notes><![CDATA[
         <h3>1.0.2</h3>
         <ul>
