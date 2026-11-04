@@ -111,7 +111,7 @@ class JsTsFlowExtractor(private val project: Project) : LanguageFlowExtractor {
         maxDepth: Int,
         includeModels: Boolean
     ): FlowExtractionOutcome {
-        val context = AnalysisContext(project)
+        val context = AnalysisContext(project.basePath)
         val source = context.sourceForFile(file)
             ?: return FlowExtractionOutcome.failure(languageKind, "Unable to read this file for tokenizing.")
         val scope = resolveScope(source.outline, caretOffset)
@@ -248,8 +248,8 @@ class JsTsFlowExtractor(private val project: Project) : LanguageFlowExtractor {
         models[id] = FlowNode(
             id = id,
             displayName = type.name,
-            filePath = relativePath(source.filePath),
-            range = lineRange(source.text, start, end),
+            filePath = jsRelativePath(source.filePath, project.basePath),
+            range = jsLineRange(source.text, start, end),
             languageKind = source.languageKind,
             resolutionStatus = ResolutionStatus.RESOLVED,
             kind = NodeKind.MODEL,
@@ -263,8 +263,8 @@ class JsTsFlowExtractor(private val project: Project) : LanguageFlowExtractor {
         return FlowNode(
             id = "${source.filePath}:$start-$end",
             displayName = scope.displayName,
-            filePath = relativePath(source.filePath),
-            range = lineRange(source.text, start, end),
+            filePath = jsRelativePath(source.filePath, project.basePath),
+            range = jsLineRange(source.text, start, end),
             languageKind = source.languageKind,
             resolutionStatus = status,
             kind = scope.kind,
@@ -278,32 +278,12 @@ class JsTsFlowExtractor(private val project: Project) : LanguageFlowExtractor {
         return FlowNode(
             id = "${source.filePath}:$start-$end",
             displayName = "${site.rawText}()",
-            filePath = relativePath(source.filePath),
-            range = lineRange(source.text, start, end),
+            filePath = jsRelativePath(source.filePath, project.basePath),
+            range = jsLineRange(source.text, start, end),
             languageKind = source.languageKind,
             resolutionStatus = ResolutionStatus.UNRESOLVED,
             kind = NodeKind.UNKNOWN
         )
-    }
-
-    private fun lineRange(text: String, startOffset: Int, endOffset: Int): SourceRange {
-        if (text.isEmpty()) return SourceRange.UNKNOWN
-        val start = startOffset.coerceIn(0, text.length)
-        val end = endOffset.coerceIn(start, text.length)
-        var startLine = 1
-        var endLine = 1
-        for (index in 0 until end) {
-            if (text[index] == '\n') {
-                endLine++
-                if (index < start) startLine++
-            }
-        }
-        return SourceRange(startLine, endLine)
-    }
-
-    private fun relativePath(path: String): String {
-        val basePath = project.basePath ?: return path
-        return if (path.startsWith(basePath)) path.removePrefix(basePath).removePrefix("/") else path
     }
 
     /**
@@ -1686,8 +1666,12 @@ internal data class FlowSource(
 
 /**
  * Per-run cache for parsed files, used by the tokenizer tier. Nothing is kept between runs.
+ *
+ * Deliberately platform free: in the IDE the [JsTsFlowExtractor] passes `project.basePath` for
+ * project-relative paths; the headless [com.bisotun.flowextractor.TextFlowExtractor] passes
+ * `null` so absolute fixture paths are preserved.
  */
-internal class AnalysisContext(private val project: Project) {
+internal class AnalysisContext(private val basePath: String?) {
 
     private val sources = HashMap<String, FlowSource?>()
 
@@ -2010,4 +1994,26 @@ internal class JsCallResolver {
             "sessionStorage", "navigator", "location", "history", "fetch", "require"
         )
     }
+}
+
+/** Computes a 1-based, inclusive line range for a source offset span. */
+internal fun jsLineRange(text: String, startOffset: Int, endOffset: Int): SourceRange {
+    if (text.isEmpty()) return SourceRange.UNKNOWN
+    val start = startOffset.coerceIn(0, text.length)
+    val end = endOffset.coerceIn(start, text.length)
+    var startLine = 1
+    var endLine = 1
+    for (index in 0 until end) {
+        if (text[index] == '\n') {
+            endLine++
+            if (index < start) startLine++
+        }
+    }
+    return SourceRange(startLine, endLine)
+}
+
+/** Strips [basePath] from a file path; returns [path] unchanged when it is not inside the base. */
+internal fun jsRelativePath(path: String, basePath: String?): String {
+    val base = basePath ?: return path
+    return if (path.startsWith(base)) path.removePrefix(base).removePrefix("/") else path
 }
