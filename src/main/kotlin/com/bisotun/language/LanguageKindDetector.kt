@@ -23,6 +23,7 @@ object LanguageKindDetector {
         byExtension == LanguageKind.UNKNOWN -> byLanguage
         byLanguage == LanguageKind.UNKNOWN -> byExtension
         byExtension == LanguageKind.JSX || byExtension == LanguageKind.TSX -> byExtension
+        byExtension == LanguageKind.PYTHON -> byExtension
         byLanguage.isJsFamily && byExtension.isJsFamily -> byExtension
         else -> byLanguage
     }
