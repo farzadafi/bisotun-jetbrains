@@ -22,7 +22,7 @@
         <ul>
           <li><b>Deep Flow Extraction:</b> Recursively crawls method execution call chains up to configurable depths.</li>
           <li><b>Model Crawler:</b> Automatically extracts referenced DTOs, Entities, and Interfaces.</li>
-          <li><b>Multi-Language Support:</b> Seamless support for <b>Java</b>, <b>JavaScript</b>, and <b>TypeScript</b> (including React <b>JSX/TSX</b>), even in IntelliJ IDEA Community edition!</li>
+          <li><b>Multi-Language Support:</b> Seamless support for <b>Java</b>, <b>Python</b>, <b>JavaScript</b>, and <b>TypeScript</b> (including React <b>JSX/TSX</b>), even in IntelliJ IDEA Community edition!</li>
           <li><b>LLM-Optimized Markdown:</b> Generates structured markdown trees ready to be pasted into AI prompts.</li>
         </ul>
 
