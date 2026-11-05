@@ -20,10 +20,17 @@ class FlowExtractionDispatcher(private val project: Project) {
     private val log = Logger.getInstance(FlowExtractionDispatcher::class.java)
 
     /** Strategies are cheap and stateless apart from the project, so one instance per dispatch is enough. */
-    private val extractors: List<LanguageFlowExtractor> = listOf(
-        JavaFlowExtractor(project),
-        JsTsFlowExtractor(project)
-    )
+    private val extractors: List<LanguageFlowExtractor> = buildList {
+        try {
+            // Check if Java PSI is available in the current IDE runtime
+            Class.forName("com.intellij.psi.PsiMethod", false, FlowExtractionDispatcher::class.java.classLoader)
+            add(JavaFlowExtractor(project))
+        } catch (_: Throwable) {
+            log.info("Java module not detected; Java extraction disabled.")
+        }
+        add(JsTsFlowExtractor(project))
+        add(PythonFlowExtractor(project))
+    }
 
     fun extract(
         file: PsiFile,
