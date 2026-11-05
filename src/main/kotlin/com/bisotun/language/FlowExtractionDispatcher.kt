@@ -1,6 +1,6 @@
 package com.bisotun.language
 
-import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
@@ -43,7 +43,7 @@ class FlowExtractionDispatcher(private val project: Project) {
             ?: return FlowExtractionOutcome.failure(languageKind, unsupportedLanguageMessage(languageKind))
 
         return try {
-            ReadAction.compute<FlowExtractionOutcome, Throwable> {
+            runReadAction {
                 extractor.extractFlow(file, editor, maxDepth, includeModels)
             }
         } catch (t: Throwable) {
@@ -57,7 +57,7 @@ class FlowExtractionDispatcher(private val project: Project) {
 
     /** Language detection never throws; unknown metadata simply degrades to [LanguageKind.UNKNOWN]. */
     fun detectLanguage(file: PsiFile): LanguageKind = try {
-        ReadAction.compute<LanguageKind, Throwable> { LanguageKindDetector.detect(file) }
+        runReadAction { LanguageKindDetector.detect(file) }
     } catch (t: Throwable) {
         log.debug("Language detection failed", t)
         LanguageKind.UNKNOWN

@@ -9,6 +9,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.DumbService
@@ -16,15 +17,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import java.awt.datatransfer.StringSelection
 
-/**
- * Shared implementation of every Bisotun extraction action.
- *
- * Each concrete action only declares its configuration ([maxDepth], [includeModels], [actionText]);
- * the text, description and keyboard shortcut that users see stay in `plugin.xml`, which remains the
- * single source of truth for their registration. The extraction itself is delegated to
- * [FlowExtractionDispatcher], so all variants behave identically for every supported language and no
- * action ever inspects PSI itself.
- */
 abstract class ExtractFlowActionBase(
     private val maxDepth: Int = 4,
     private val includeModels: Boolean = true,
@@ -44,10 +36,13 @@ abstract class ExtractFlowActionBase(
         }
 
         try {
-            val outcome = FlowExtractionDispatcher(project).extract(psiFile, editor, maxDepth, includeModels)
+            val outcome = runReadAction {
+                FlowExtractionDispatcher(project).extract(psiFile, editor, maxDepth, includeModels)
+            }
+
             val result = outcome.result
             if (result == null) {
-                showWarningNotification(project, outcome.message ?: DEFAULT_MESSAGE)
+               showWarningNotification(project, outcome.message ?: DEFAULT_MESSAGE)
                 return
             }
 
