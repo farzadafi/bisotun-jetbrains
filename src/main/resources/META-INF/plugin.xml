@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.bisotun.flowextractor</id>
     <name>Bisotun Flow Extractor</name>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <vendor>Bisotun</vendor>
     <description><![CDATA[
         <p><img src="https://raw.githubusercontent.com/farzadafi/bisotun-jetbrains/refs/heads/main/src/main/resources/assets/output.gif" alt="Bisotun Flow Extractor Demo"/></p>
@@ -36,6 +36,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.0.5</h3>
+        <ul>
+            <li>Added robust multi-language flow extraction support for <b>Python</b> (`.py`, `pyw`, `pyi`) with full absolute/relative import resolution.</li>
+            <li>Resolved IntelliJ IDEA module classloader constraints via optional Java dependencies, enabling seamless multi-IDE compatibility (IntelliJ IDEA, PyCharm, WebStorm).</li>
+        </ul>
         <h3>1.0.4</h3>
         <ul>
             <li>Added inline animated GIF demo inside the plugin description for direct viewing in IntelliJ IDEA client.</li>
@@ -55,7 +60,6 @@
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true">com.intellij.java</depends>
     <depends optional="true">com.intellij.modules.java</depends>
-
 
 
     <extensions defaultExtensionNs="com.intellij" />

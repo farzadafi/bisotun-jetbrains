@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "ir.farzadafi"
-version = "1.0.4"
+version = "1.0.5"
 
 repositories {
     mavenCentral()
@@ -27,15 +27,6 @@ dependencies {
         pluginVerifier()
     }
 }
-
-// intellijPlatform {
-//      pluginVerification {
-//         ides {
-//             ide(IntelliJPlatformType.IntellijIdeaCommunity, "2024.1.4")
-//             recommended()
-//         }
-//     }
-// }
 
 tasks.named<PatchPluginXmlTask>("patchPluginXml") {
     untilBuild.set(provider { null })
