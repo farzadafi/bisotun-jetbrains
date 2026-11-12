@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.bisotun.flowextractor</id>
     <name>Bisotun Flow Extractor</name>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <vendor>Bisotun</vendor>
     <description><![CDATA[
         <p><img src="https://raw.githubusercontent.com/farzadafi/bisotun-jetbrains/refs/heads/main/src/main/resources/assets/output.gif" alt="Bisotun Flow Extractor Demo"/></p>
@@ -36,6 +36,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.0.7</h3>
+        <ul>
+            <li>Migrated the flow dispatcher to the non-deprecated <code>Application.runReadAction(Computable)</code> API, rethrowing <code>ProcessCanceledException</code> instead of swallowing it.</li>
+            <li>Renamed the optional Java descriptor <code>java-part.xml</code> to <code>bisotun-java.xml</code> and updated the <code>config-file</code> references in the optional dependencies.</li>
+        </ul>
         <h3>1.0.6</h3>
         <ul>
             <li>Maintenance release: Fully resolved all plugin verifier warnings to ensure seamless IDE compatibility.</li>
@@ -64,8 +69,7 @@
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends optional="true" config-file="java-part.xml">com.intellij.java</depends>
-    <depends optional="true" config-file="java-part.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="bisotun-java.xml">com.intellij.java</depends>
 
     <extensions defaultExtensionNs="com.intellij" />
 
