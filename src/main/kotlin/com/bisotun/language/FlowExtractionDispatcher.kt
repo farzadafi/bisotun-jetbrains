@@ -1,9 +1,11 @@
 package com.bisotun.language
 
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiFile
 
 /**
@@ -43,9 +45,13 @@ class FlowExtractionDispatcher(private val project: Project) {
             ?: return FlowExtractionOutcome.failure(languageKind, unsupportedLanguageMessage(languageKind))
 
         return try {
-            runReadAction {
-                extractor.extractFlow(file, editor, maxDepth, includeModels)
-            }
+            ApplicationManager.getApplication().runReadAction(
+                Computable { extractor.extractFlow(file, editor, maxDepth, includeModels) }
+            )
+        } catch (e: ProcessCanceledException) {
+            // Let the platform cancel processing (e.g. indexing or modal progress) instead of
+            // swallowing it; do NOT convert it into a generic "could not analyze" failure.
+            throw e
         } catch (t: Throwable) {
             log.warn("${languageKind.displayName} flow extraction failed", t)
             FlowExtractionOutcome.failure(
@@ -57,7 +63,11 @@ class FlowExtractionDispatcher(private val project: Project) {
 
     /** Language detection never throws; unknown metadata simply degrades to [LanguageKind.UNKNOWN]. */
     fun detectLanguage(file: PsiFile): LanguageKind = try {
-        runReadAction { LanguageKindDetector.detect(file) }
+        ApplicationManager.getApplication().runReadAction(
+            Computable { LanguageKindDetector.detect(file) }
+        )
+    } catch (e: ProcessCanceledException) {
+        throw e
     } catch (t: Throwable) {
         log.debug("Language detection failed", t)
         LanguageKind.UNKNOWN
