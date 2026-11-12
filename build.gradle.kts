@@ -1,4 +1,3 @@
-import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.tasks.PatchPluginXmlTask
 
 plugins {
@@ -8,7 +7,7 @@ plugins {
 }
 
 group = "ir.farzadafi"
-version = "1.0.6"
+version = "1.0.7"
 
 repositories {
     mavenCentral()
@@ -25,6 +24,17 @@ dependencies {
         bundledPlugin("com.intellij.java")
         instrumentationTools()
         pluginVerifier()
+    }
+}
+
+// اصلاحیه اصلی اینجاست: استفاده از نوع رشته‌ای که در این نسخه کاملاً پشتیبانی می‌شود
+intellijPlatform {
+    pluginVerification {
+        ides {
+            ide("IC-2024.1.4")
+            ide("IC-2024.2")
+            ide("IC-2024.3")
+        }
     }
 }
 
