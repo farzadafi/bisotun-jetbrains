@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.8] - Unreleased
+
+### Fixed
+- C++ flow extraction now resolves class methods across a translation unit: a call such as
+  `runOne()` inside an out-of-line `Pipeline::run()` definition is bound to the later same-file
+  method, and header prototypes are paired with their `.cpp`/`.cc`/`.cxx` definitions instead of
+  staying unresolved.
+- Receiver and template member calls (`jobs_.filter()`, `worker_->execute()`) resolve through
+  the enclosing class field type, including `unique_ptr`/`shared_ptr` unwrap and template methods
+  defined in a quoted project-local header such as `Repository<T>::filter`.
+- Lambda predicate/comparator bodies are nested callbacks of the containing call. Their
+  `return` statements and inner calls are no longer emitted as unrelated top-level execution
+  steps of the caller.
+- Unresolved standard-library noise (`error.what()`, container accessors, `std::` helpers) is
+  filtered; project-defined methods with the same names still resolve. Quoted `#include`
+  directives are treated as lookup dependencies, not executable steps of a function.
+- Overloads are accepted only when arity matches uniquely. Same-named methods on unrelated
+  classes or namespaces stay unresolved rather than being guessed. Include lookup is a bounded
+  BFS of quoted headers plus the same-directory companion file; `ProcessCanceledException`
+  still propagates.
+
 ## [1.0.7] - 2026-11-11
 
 ### Fixed
