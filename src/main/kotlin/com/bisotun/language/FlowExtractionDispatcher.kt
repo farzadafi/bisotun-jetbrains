@@ -32,6 +32,7 @@ class FlowExtractionDispatcher(private val project: Project) {
         }
         add(JsTsFlowExtractor(project))
         add(PythonFlowExtractor(project))
+        add(CppFlowExtractor(project))
     }
 
     fun extract(
