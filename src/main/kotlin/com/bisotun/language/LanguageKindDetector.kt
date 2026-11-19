@@ -24,6 +24,9 @@ object LanguageKindDetector {
         byLanguage == LanguageKind.UNKNOWN -> byExtension
         byExtension == LanguageKind.JSX || byExtension == LanguageKind.TSX -> byExtension
         byExtension == LanguageKind.PYTHON -> byExtension
+        // Header files may be reported as C, ObjectiveC or plain text depending on the plugins
+        // installed; the C++ extensions required by this feature are authoritative for them.
+        byExtension == LanguageKind.CPP -> byExtension
         byLanguage.isJsFamily && byExtension.isJsFamily -> byExtension
         else -> byLanguage
     }
