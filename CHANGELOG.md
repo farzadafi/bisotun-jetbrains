@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## [1.0.8] - Unreleased
+## [1.0.8] - 2026-11-20
 
 ### Fixed
 - C++ flow extraction now resolves class methods across a translation unit: a call such as
