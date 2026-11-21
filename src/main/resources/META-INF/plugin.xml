@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.bisotun.flowextractor</id>
     <name>Bisotun Flow Extractor</name>
-    <version>1.0.8</version>
+    <version>1.1.0</version>
     <vendor>Bisotun</vendor>
     <description><![CDATA[
         <p><img src="https://raw.githubusercontent.com/farzadafi/bisotun-jetbrains/refs/heads/main/src/main/resources/assets/output.gif" alt="Bisotun Flow Extractor Demo"/></p>
@@ -22,7 +22,7 @@
         <ul>
           <li><b>Deep Flow Extraction:</b> Recursively crawls method execution call chains up to configurable depths.</li>
           <li><b>Model Crawler:</b> Automatically extracts referenced DTOs, Entities, and Interfaces.</li>
-          <li><b>Multi-Language Support:</b> Seamless support for <b>Java</b>, <b>Python</b>, <b>JavaScript</b>, <b>TypeScript</b> (including React <b>JSX/TSX</b>), and <b>C++</b> (<code>.cpp</code>, <code>.cc</code>, <code>.cxx</code>, <code>.h</code>, <code>.hh</code>, <code>.hpp</code>, <code>.hxx</code>), even in IntelliJ IDEA Community edition!</li>
+          <li><b>Multi-Language Support:</b> Support for <b>Java</b>, <b>Python</b>, <b>JavaScript</b>, <b>TypeScript</b> (including React <b>JSX/TSX</b>), <b>C++</b> (<code>.cpp</code>, <code>.cc</code>, <code>.cxx</code>, <code>.h</code>, <code>.hh</code>, <code>.hpp</code>, <code>.hxx</code>) and <b>Go</b> (<code>.go</code>). Go support requires <b>GoLand</b> (or IntelliJ IDEA Ultimate) with the bundled Go plugin enabled, because it is built on native Go PSI.</li>
           <li><b>LLM-Optimized Markdown:</b> Generates structured markdown trees ready to be pasted into AI prompts.</li>
         </ul>
 
@@ -36,6 +36,19 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.1.0</h3>
+        <ul>
+            <li><b>Go extraction now uses native Go PSI</b> from the official JetBrains Go plugin instead of a bounded tokenizer. Declarations, types, generics, signatures, receivers, local variables and call targets are read from the Go PSI model, and calls are resolved with JetBrains reference resolution across files and imported project packages.</li>
+            <li><b>Go requires GoLand</b> (or IntelliJ IDEA Ultimate) with the bundled Go plugin enabled. IntelliJ IDEA Community alone does not provide the Go PSI APIs, so Go extraction reports that prerequisite instead of falling back to text parsing. Other languages keep working where their plugins/PSI are available.</li>
+            <li>The plugin now builds against IntelliJ IDEA Ultimate 2024.1 with the Go plugin dependency and is verified against GoLand 2024.1.4, 2024.2 and 2024.3.</li>
+            <li>Go interface calls stay at the interface declaration; dynamic or unresolved targets are reported as <code>unresolved</code> and are never matched by name.</li>
+        </ul>
+        <h3>1.0.9</h3>
+        <ul>
+            <li>Added <b>Go</b> flow extraction for <code>.go</code> files: packages and imports (including aliases), structs, interfaces, embedded types, fields, functions with multiple return values, pointer and value receivers, generics, local and short declarations, project-local models, control-flow statements and nested calls.</li>
+            <li>Go calls resolve across files of the same package and into project-local imported packages (resolved through <code>go.mod</code>). Unknown receiver types and interface implementations stay <code>unresolved</code> instead of being guessed, and built-in/standard-library noise is filtered.</li>
+            <li>Go uses a bounded tokenizer because the JetBrains Go plugin is not part of the IntelliJ IDEA Community SDK this plugin targets; the copied output states that limitation.</li>
+        </ul>
         <h3>1.0.8</h3>
         <ul>
             <li>Fixed C++ resolution across <code>.cpp</code>/<code>.hpp</code> boundaries: same-file methods defined later, header prototypes with source definitions, template members such as <code>Repository&lt;T&gt;::filter</code>, and receiver calls through known fields including smart pointers.</li>
@@ -75,6 +88,8 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="bisotun-java.xml">com.intellij.java</depends>
+    <!-- Go extraction is built on Go PSI, which is provided by GoLand's bundled Go plugin. -->
+    <depends optional="true">org.jetbrains.plugins.go</depends>
 
     <extensions defaultExtensionNs="com.intellij" />
 
