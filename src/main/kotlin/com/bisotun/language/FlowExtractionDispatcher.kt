@@ -33,6 +33,24 @@ class FlowExtractionDispatcher(private val project: Project) {
         add(JsTsFlowExtractor(project))
         add(PythonFlowExtractor(project))
         add(CppFlowExtractor(project))
+        goExtractor()?.let(::add)
+    }
+
+    /**
+     * Go extraction is built on the JetBrains Go plugin PSI, which only exists in GoLand (and
+     * IntelliJ IDEA Ultimate with the Go plugin installed). The class is referenced lazily so the
+     * rest of the plugin still loads in IDEs without that plugin; the check is a real plugin
+     * availability probe, not a substitute for the declared dependency.
+     */
+    private fun goExtractor(): LanguageFlowExtractor? = try {
+        Class.forName("com.goide.psi.GoFile", false, GoFlowExtractor::class.java.classLoader)
+        GoFlowExtractor(project)
+    } catch (_: ClassNotFoundException) {
+        log.info("Go plugin not detected; Go extraction disabled.")
+        null
+    } catch (_: NoClassDefFoundError) {
+        log.info("Go PSI classes not available; Go extraction disabled.")
+        null
     }
 
     fun extract(
@@ -80,6 +98,7 @@ class FlowExtractionDispatcher(private val project: Project) {
     private fun unsupportedLanguageMessage(languageKind: LanguageKind): String = when (languageKind) {
         LanguageKind.KOTLIN ->
             "Kotlin PSI is not bundled with this plugin, so Kotlin flow extraction is not supported."
+        LanguageKind.GO -> GoFlowExtractor.GO_PLUGIN_REQUIRED_MESSAGE
         LanguageKind.UNKNOWN -> "This file type is not supported by Bisotun."
         else -> "No flow extractor is registered for ${languageKind.displayName}."
     }
