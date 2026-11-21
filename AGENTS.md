@@ -9,7 +9,7 @@ If any instruction conflicts with chat messages or assumptions, **this file wins
 4. **No synthetic/lying PSI elements.** Do not create fake `PsiElement` like `"Type: Foo"`. If something is unresolved, mark it explicitly as unresolved in the domain model.
 5. **Clean code + SOLID.** Small classes, single responsibility, dependency inversion, testable pure logic where possible.
 6. **No “drive-by refactors”.** Only refactor what the task requires. Prefer small, reviewable commits.
-7. **Build must work with IntelliJ IDEA Community target.** JS plugin must be optional at runtime; do not hard-require it in Gradle for IC builds.
+7. **Build target.** The build targets IntelliJ IDEA Ultimate with the optional Go plugin because Go extraction is built on native Go PSI (see the Go rule below); the JS plugin must still be optional at runtime. Go support must never fall back to name matching or synthetic PSI.
 
 ## 1) Repository goal
 Extract and copy a call flow graph from the caret/root function with 4 actions:
@@ -100,7 +100,8 @@ You must provide in the PR description:
 - Any limitations (explicit)
 
 ## 8) Forbidden actions
-- Adding `bundledPlugin("JavaScript")` unconditionally for IC target
+- Adding `bundledPlugin("JavaScript")` unconditionally for the build target
+- Replacing the Go PSI extractor with text/token matching, or claiming Go support in IDEs without the JetBrains Go plugin (Go requires GoLand or IntelliJ IDEA Ultimate with the Go plugin enabled)
 - Regex call extraction for JS/TS
 - Creating synthetic PsiElements to “pretend” types exist
 - Mixing Java PSI logic into JS logic (or vice versa)
