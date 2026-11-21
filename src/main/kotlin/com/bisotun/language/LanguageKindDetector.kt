@@ -27,6 +27,10 @@ object LanguageKindDetector {
         // Header files may be reported as C, ObjectiveC or plain text depending on the plugins
         // installed; the C++ extensions required by this feature are authoritative for them.
         byExtension == LanguageKind.CPP -> byExtension
+        // Go extraction needs the Go plugin's PSI. The extension stays authoritative so a `.go`
+        // file without the plugin is still routed to Go, where the dispatcher reports the GoLand
+        // prerequisite instead of claiming the file is unsupported.
+        byExtension == LanguageKind.GO -> byExtension
         byLanguage.isJsFamily && byExtension.isJsFamily -> byExtension
         else -> byLanguage
     }
