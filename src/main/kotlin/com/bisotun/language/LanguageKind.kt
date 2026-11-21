@@ -15,6 +15,7 @@ enum class LanguageKind(val displayName: String, val codeFence: String) {
     TSX("TypeScript (TSX)", "typescript"),
     PYTHON("Python", "python"),
     CPP("C++", "cpp"),
+    GO("Go", "go"),
     UNKNOWN("Unknown", "text");
 
     val isJsFamily: Boolean get() = this == JS || this == JSX || this == TS || this == TSX
@@ -31,6 +32,7 @@ enum class LanguageKind(val displayName: String, val codeFence: String) {
             "tsx" -> TSX
             "py", "pyw", "pyi" -> PYTHON
             "cpp", "cc", "cxx", "h", "hh", "hpp", "hxx" -> CPP
+            "go" -> GO
             else -> UNKNOWN
         }
 
@@ -45,6 +47,7 @@ enum class LanguageKind(val displayName: String, val codeFence: String) {
                 id.contains("javascript") || id.contains("ecmascript") -> JS
                 id.contains("python") || id == "py" -> PYTHON
                 id.contains("c++") || id == "cpp" || id == "cplusplus" -> CPP
+                id == "go" || id == "golang" -> GO
                 id == "ts" || id == "tsx" || id == "js" || id == "jsx" -> fromExtension(id)
                 else -> UNKNOWN
             }
