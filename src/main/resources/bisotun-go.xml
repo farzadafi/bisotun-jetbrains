@@ -1,0 +1,8 @@
+<idea-plugin package="com.bisotun.go">
+    <dependencies>
+        <plugin id="org.jetbrains.plugins.go"/>
+    </dependencies>
+    <extensions defaultExtensionNs="com.bisotun.flowextractor">
+        <languageFlowExtractor implementation="com.bisotun.go.GoFlowExtractorProvider"/>
+    </extensions>
+</idea-plugin>
