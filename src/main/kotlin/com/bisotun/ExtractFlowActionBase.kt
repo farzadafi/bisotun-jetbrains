@@ -9,12 +9,12 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.util.Computable
 import java.awt.datatransfer.StringSelection
 
 abstract class ExtractFlowActionBase(
@@ -36,9 +36,11 @@ abstract class ExtractFlowActionBase(
         }
 
         try {
-            val outcome = runReadAction {
-                FlowExtractionDispatcher(project).extract(psiFile, editor, maxDepth, includeModels)
-            }
+            val outcome = ApplicationManager.getApplication().runReadAction(
+                Computable {
+                    FlowExtractionDispatcher(project).extract(psiFile, editor, maxDepth, includeModels)
+                }
+            )
 
             val result = outcome.result
             if (result == null) {
