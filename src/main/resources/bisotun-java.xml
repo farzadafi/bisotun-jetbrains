@@ -1,0 +1,8 @@
+<idea-plugin package="com.bisotun.java">
+    <dependencies>
+        <plugin id="com.intellij.modules.java"/>
+    </dependencies>
+    <extensions defaultExtensionNs="com.bisotun.flowextractor">
+        <languageFlowExtractor implementation="com.bisotun.java.JavaFlowExtractorProvider"/>
+    </extensions>
+</idea-plugin>
