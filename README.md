@@ -159,8 +159,9 @@ The extracted flow is rendered as Markdown and copied to the clipboard:
 - **ID**: `com.bisotun.flowextractor`
 - **Version**: `1.1.0`
 - **Vendor**: `Bisotun`
-- **Dependencies**: `com.intellij.modules.platform`, `com.intellij.modules.java` (optional), and
-  `org.jetbrains.plugins.go` (optional; required only for Go extraction and provided by GoLand)
+- **Dependencies**: `com.intellij.modules.platform`. Java PSI is an optional content module
+  (`bisotun-java`, requires `com.intellij.modules.java`). Go PSI is an optional content module
+  (`bisotun-go`, requires `org.jetbrains.plugins.go`, provided by GoLand)
 - **Actions**: `CopyDeepFlowAction`, `CopyShallowFlowAction`, `CopyShallowFlowWithoutModelAction`,
   `CopyMethodOnlyAction`
 
