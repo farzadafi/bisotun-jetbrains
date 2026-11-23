@@ -3,6 +3,7 @@ package com.bisotun.language
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Computable
@@ -14,8 +15,11 @@ import com.intellij.psi.PsiFile
  * The decision is taken from the file itself ([LanguageKindDetector] merges the PSI language id with
  * the file extension), never from the calling action or class name heuristics. This is also what
  * makes JS/TSX work in IntelliJ IDEA Community: those files are plain text there, so detection falls
- * back to the extension and the JS/TS strategy - not a `PsiMethod` check - decides whether the caret
- * is usable.
+ * back to the extension and the JS/TS strategy decides whether the caret is usable.
+ *
+ * Java and Go extractors are not named here. They are contributed by optional content modules, which
+ * the IDE loads only when the Java or Go plugin is installed, so this class never references those
+ * PSI types.
  */
 class FlowExtractionDispatcher(private val project: Project) {
 
@@ -23,34 +27,12 @@ class FlowExtractionDispatcher(private val project: Project) {
 
     /** Strategies are cheap and stateless apart from the project, so one instance per dispatch is enough. */
     private val extractors: List<LanguageFlowExtractor> = buildList {
-        try {
-            // Check if Java PSI is available in the current IDE runtime
-            Class.forName("com.intellij.psi.PsiMethod", false, FlowExtractionDispatcher::class.java.classLoader)
-            add(JavaFlowExtractor(project))
-        } catch (_: Throwable) {
-            log.info("Java module not detected; Java extraction disabled.")
+        EXTRACTOR_EP.extensionList.forEach { provider ->
+            add(provider.create(project))
         }
         add(JsTsFlowExtractor(project))
         add(PythonFlowExtractor(project))
         add(CppFlowExtractor(project))
-        goExtractor()?.let(::add)
-    }
-
-    /**
-     * Go extraction is built on the JetBrains Go plugin PSI, which only exists in GoLand (and
-     * IntelliJ IDEA Ultimate with the Go plugin installed). The class is referenced lazily so the
-     * rest of the plugin still loads in IDEs without that plugin; the check is a real plugin
-     * availability probe, not a substitute for the declared dependency.
-     */
-    private fun goExtractor(): LanguageFlowExtractor? = try {
-        Class.forName("com.goide.psi.GoFile", false, GoFlowExtractor::class.java.classLoader)
-        GoFlowExtractor(project)
-    } catch (_: ClassNotFoundException) {
-        log.info("Go plugin not detected; Go extraction disabled.")
-        null
-    } catch (_: NoClassDefFoundError) {
-        log.info("Go PSI classes not available; Go extraction disabled.")
-        null
     }
 
     fun extract(
@@ -98,8 +80,14 @@ class FlowExtractionDispatcher(private val project: Project) {
     private fun unsupportedLanguageMessage(languageKind: LanguageKind): String = when (languageKind) {
         LanguageKind.KOTLIN ->
             "Kotlin PSI is not bundled with this plugin, so Kotlin flow extraction is not supported."
-        LanguageKind.GO -> GoFlowExtractor.GO_PLUGIN_REQUIRED_MESSAGE
+        LanguageKind.GO -> GO_PLUGIN_REQUIRED_MESSAGE
         LanguageKind.UNKNOWN -> "This file type is not supported by Bisotun."
         else -> "No flow extractor is registered for ${languageKind.displayName}."
+    }
+
+    private companion object {
+        val EXTRACTOR_EP = ExtensionPointName.create<LanguageFlowExtractorProvider>(
+            "com.bisotun.flowextractor.languageFlowExtractor"
+        )
     }
 }
