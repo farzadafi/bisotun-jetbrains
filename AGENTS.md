@@ -71,10 +71,13 @@ Create (or refactor into) packages like:
   - `LanguageKind` (JAVA, KOTLIN, JS, TS, JSX, TSX, UNKNOWN)
   - `LanguageFlowExtractor` interface (one strategy per language, `isApplicable` + `extract`)
   - `FlowExtractionDispatcher` (picks exactly one extractor per caret, never merges languages)
-  - `JavaFlowExtractor` (adapter over existing Java FlowCrawler / ModelExtractor)
   - `JsTsFlowExtractor` (both tiers live here: PSI path when the JavaScript plugin is
     available, tokenizer path when it is not)
   - `PsiFlowNodes` / `LanguageKindDetector` / `LanguageKind` (shared platform helpers)
+- `com.bisotun.java.*` (content module `bisotun-java`, loaded only with `com.intellij.modules.java`)
+  - `JavaFlowExtractor` (adapter over `FlowCrawler` / `ModelExtractor`)
+- `com.bisotun.go.*` (content module `bisotun-go`, loaded only with `org.jetbrains.plugins.go`)
+  - `GoFlowExtractor`
 - `com.bisotun.render.*`
   - `MarkdownRenderer` (single entry point); today `com.bisotun.MarkdownFormatter`
 - `com.bisotun.actions.*`
