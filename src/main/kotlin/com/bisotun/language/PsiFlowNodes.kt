@@ -8,7 +8,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNamedElement
 
 /**
@@ -19,20 +18,6 @@ import com.intellij.psi.PsiNamedElement
 object PsiFlowNodes {
 
     private const val UNKNOWN_FILE = "<unknown file>"
-
-    fun fromMethod(
-        project: Project,
-        method: PsiMethod,
-        languageKind: LanguageKind = LanguageKind.JAVA,
-        status: ResolutionStatus = ResolutionStatus.RESOLVED
-    ): FlowNode {
-        val parameters = method.parameterList.parameters.joinToString(", ") { parameter ->
-            listOfNotNull(parameter.type.presentableText, parameter.name).joinToString(" ")
-        }
-        val owner = method.containingClass?.qualifiedName ?: method.containingClass?.name
-        val signature = if (owner != null) "$owner.${method.name}($parameters)" else "${method.name}($parameters)"
-        return fromElement(project, method, languageKind, NodeKind.METHOD, status, signature)
-    }
 
     fun fromElement(
         project: Project,
