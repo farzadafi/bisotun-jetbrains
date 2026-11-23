@@ -31,7 +31,7 @@ data class FlowExtractionOutcome(
  * (`resolveRootFromCaret` + `buildFlow`): strategies receive the editor and file exactly as the
  * action sees them and decide themselves how to validate the caret. That matters for JavaScript and
  * TypeScript, whose PSI is *not* available in IntelliJ IDEA Community (those files arrive as plain
- * text), so no strategy may assume a [com.intellij.psi.PsiMethod] exists.
+ * text), so no strategy may assume a Java method PSI element exists.
  *
  * Implementations must never fabricate PSI elements: every produced
  * [com.bisotun.domain.FlowNode] maps to a real source range, and anything that cannot be resolved is
