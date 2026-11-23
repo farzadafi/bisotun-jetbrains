@@ -17,17 +17,23 @@ All notable changes to this project are documented in this file.
   declarations with inferred types, composite literals, control flow (`if`/`else`, `for`/`range`,
   `switch`/type switch, `select`, `return`, `defer`, `go`, channel sends), anonymous functions and
   calls across same-package files and project-local imported packages.
-- `GoFlowExtractor` is now loaded only when the Go plugin is present at runtime
-  (`com.goide.psi.GoFile` availability check); without it the action reports the GoLand
-  prerequisite with a clear message.
+- `GoFlowExtractor` is now loaded only when the Go plugin is present at runtime. It lives in
+  the `bisotun-go` content module, which the IDE loads only when `org.jetbrains.plugins.go` is
+  installed; without it the action reports the GoLand prerequisite with a clear message.
+- Java PSI (`FlowCrawler`, `ModelExtractor`, `JavaFlowExtractor`) lives in the `bisotun-java`
+  content module and is loaded only when `com.intellij.modules.java` is available. The main plugin
+  class loader does not reference Java or Go PSI, so GoLand (no Java plugin) and IDEs without the
+  Go plugin do not fail class loading. Extraction behavior is unchanged when the matching plugin
+  is installed.
 
 ### Platform and build
 - The build/test platform moved from IntelliJ IDEA Community to **IntelliJ IDEA Ultimate 2024.1.4**
   with the official Go plugin dependency (`org.jetbrains.plugins.go`, version `241.17011.2`). This
   is required because the Go plugin descriptor states that the only compatible IDE is IntelliJ IDEA
   Ultimate; the launched IDE for Go extraction is **GoLand**, which bundles the same plugin.
-- `plugin.xml` declares `org.jetbrains.plugins.go` as an optional dependency. Existing languages
-  keep working where their plugins/PSI are available.
+- `plugin.xml` loads Java and Go through content modules `bisotun-java` (`com.intellij.modules.java`)
+  and `bisotun-go` (`org.jetbrains.plugins.go`). Existing languages keep working where their
+  plugins/PSI are available.
 - Plugin verifier matrix changed from `IC-*` to GoLand: `GO-2024.1.4`, `GO-2024.2`, `GO-2024.3`.
 - Go tests were rewritten as platform-fixture tests against real Go PSI (including a configured
   Go module for cross-package resolution); the tokenizer unit tests were removed.
