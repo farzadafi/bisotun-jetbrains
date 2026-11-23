@@ -41,6 +41,7 @@
             <li><b>Go extraction now uses native Go PSI</b> from the official JetBrains Go plugin instead of a bounded tokenizer. Declarations, types, generics, signatures, receivers, local variables and call targets are read from the Go PSI model, and calls are resolved with JetBrains reference resolution across files and imported project packages.</li>
             <li><b>Go requires GoLand</b> (or IntelliJ IDEA Ultimate) with the bundled Go plugin enabled. IntelliJ IDEA Community alone does not provide the Go PSI APIs, so Go extraction reports that prerequisite instead of falling back to text parsing. Other languages keep working where their plugins/PSI are available.</li>
             <li>The plugin now builds against IntelliJ IDEA Ultimate 2024.1 with the Go plugin dependency and is verified against GoLand 2024.1.4, 2024.2 and 2024.3.</li>
+            <li>Java and Go PSI are loaded from optional content modules (<code>bisotun-java</code>, <code>bisotun-go</code>), so IDEs without the Java or Go plugin do not load those classes.</li>
             <li>Go interface calls stay at the interface declaration; dynamic or unresolved targets are reported as <code>unresolved</code> and are never matched by name.</li>
         </ul>
         <h3>1.0.9</h3>
@@ -87,9 +88,18 @@
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends optional="true" config-file="bisotun-java.xml">com.intellij.java</depends>
-    <!-- Go extraction is built on Go PSI, which is provided by GoLand's bundled Go plugin. -->
-    <depends optional="true">org.jetbrains.plugins.go</depends>
+    <!-- Java and Go PSI stay in content modules so a missing IDE plugin is not a class-loader error. -->
+    <content>
+        <module name="bisotun-java"/>
+        <module name="bisotun-go"/>
+    </content>
+
+    <extensionPoints>
+        <extensionPoint
+            name="languageFlowExtractor"
+            interface="com.bisotun.language.LanguageFlowExtractorProvider"
+            dynamic="true"/>
+    </extensionPoints>
 
     <extensions defaultExtensionNs="com.intellij" />
 
