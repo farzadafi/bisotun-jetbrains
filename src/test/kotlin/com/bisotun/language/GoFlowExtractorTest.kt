@@ -1,5 +1,6 @@
 package com.bisotun.language
 
+import com.bisotun.go.GoFlowExtractor
 import com.bisotun.MarkdownFormatter
 import com.bisotun.domain.FlowNode
 import com.bisotun.domain.FlowResult
