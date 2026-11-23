@@ -1,5 +1,6 @@
 package com.bisotun.language
 
+import com.bisotun.go.GoFlowExtractor
 import com.bisotun.domain.FlowResult
 import com.bisotun.domain.ResolutionStatus
 import com.goide.project.GoModuleSettings
