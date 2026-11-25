@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.bisotun.flowextractor</id>
     <name>Bisotun Flow Extractor</name>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <vendor>Bisotun</vendor>
     <description><![CDATA[
         <p><img src="https://raw.githubusercontent.com/farzadafi/bisotun-jetbrains/refs/heads/main/src/main/resources/assets/output.gif" alt="Bisotun Flow Extractor Demo"/></p>
@@ -22,7 +22,7 @@
         <ul>
           <li><b>Deep Flow Extraction:</b> Recursively crawls method execution call chains up to configurable depths.</li>
           <li><b>Model Crawler:</b> Automatically extracts referenced DTOs, Entities, and Interfaces.</li>
-          <li><b>Multi-Language Support:</b> Support for <b>Java</b>, <b>Python</b>, <b>JavaScript</b>, <b>TypeScript</b> (including React <b>JSX/TSX</b>), <b>C++</b> (<code>.cpp</code>, <code>.cc</code>, <code>.cxx</code>, <code>.h</code>, <code>.hh</code>, <code>.hpp</code>, <code>.hxx</code>) and <b>Go</b> (<code>.go</code>). Go support requires <b>GoLand</b> (or IntelliJ IDEA Ultimate) with the bundled Go plugin enabled, because it is built on native Go PSI.</li>
+          <li><b>Multi-Language Support:</b> Support for <b>Java</b>, <b>Kotlin</b>, <b>Python</b>, <b>JavaScript</b>, <b>TypeScript</b> (including React <b>JSX/TSX</b>), <b>C++</b> (<code>.cpp</code>, <code>.cc</code>, <code>.cxx</code>, <code>.h</code>, <code>.hh</code>, <code>.hpp</code>, <code>.hxx</code>) and <b>Go</b> (<code>.go</code>). Kotlin support requires the bundled Kotlin plugin; Go support requires <b>GoLand</b> (or IntelliJ IDEA Ultimate) with the bundled Go plugin enabled. Both are built on native PSI.</li>
           <li><b>LLM-Optimized Markdown:</b> Generates structured markdown trees ready to be pasted into AI prompts.</li>
         </ul>
 
@@ -36,6 +36,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.2.0</h3>
+        <ul>
+            <li><b>Kotlin flow extraction</b> uses native Kotlin PSI and the Kotlin plugin's semantic reference resolution (K1 and K2): cross-file calls, overloads, extension functions, constructors, private helpers, lambdas, callable references, infix calls and Kotlin-specific syntax.</li>
+            <li>Interface calls resolve to the interface declaration; project implementations found through Kotlin light classes are labelled as <b>candidates</b>, never as guaranteed runtime targets.</li>
+            <li>Standard-library declarations are not expanded, models are real project types only, and unresolved calls stay marked unresolved. Kotlin classes live in the optional <code>bisotun-kotlin</code> content module, so IDEs without the Kotlin plugin are unaffected.</li>
+            <li>Plugin verification now covers IntelliJ IDEA Ultimate 2024.1.4-2026.1 and the separate IntelliJ IDEA Community distributions up to 2025.2 (2025.3+ is the unified distribution).</li>
+        </ul>
         <h3>1.1.0</h3>
         <ul>
             <li><b>Go extraction now uses native Go PSI</b> from the official JetBrains Go plugin instead of a bounded tokenizer. Declarations, types, generics, signatures, receivers, local variables and call targets are read from the Go PSI model, and calls are resolved with JetBrains reference resolution across files and imported project packages.</li>
@@ -91,6 +98,7 @@
     <!-- Java and Go PSI stay in content modules so a missing IDE plugin is not a class-loader error. -->
     <content>
         <module name="bisotun-java"/>
+        <module name="bisotun-kotlin"/>
         <module name="bisotun-go"/>
     </content>
 
