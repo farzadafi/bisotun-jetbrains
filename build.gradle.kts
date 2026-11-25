@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "ir.farzadafi"
-version = "1.1.0"
+version = "1.2.0"
 
 repositories {
     mavenCentral()
@@ -27,6 +27,7 @@ dependencies {
     intellijPlatform {
         intellijIdeaUltimate("2024.1.4")
         bundledPlugin("com.intellij.java")
+        bundledPlugin("org.jetbrains.kotlin")
         plugin("org.jetbrains.plugins.go:241.17011.2")
         testFramework(TestFrameworkType.Platform)
         instrumentationTools()
@@ -56,10 +57,18 @@ val pluginVerifierIdes = listOf(
     IntelliJPlatformType.CLion to "2024.3",
     IntelliJPlatformType.CLion to "2025.3",
     IntelliJPlatformType.CLion to "2026.1",
-    // IntelliJ IDEA Ultimate
+    // IntelliJ IDEA Ultimate (covers both Ultimate and Community for 2025.3+)
     IntelliJPlatformType.IntellijIdeaUltimate to "2024.1.4",
+    IntelliJPlatformType.IntellijIdeaUltimate to "2024.2",
+    IntelliJPlatformType.IntellijIdeaUltimate to "2024.3",
+    IntelliJPlatformType.IntellijIdeaUltimate to "2025.2",
     IntelliJPlatformType.IntellijIdeaUltimate to "2025.3",
     IntelliJPlatformType.IntellijIdeaUltimate to "2026.1",
+    // IntelliJ IDEA Community: separate distribution only up to 2025.2.
+    IntelliJPlatformType.IntellijIdeaCommunity to "2024.1.4",
+    IntelliJPlatformType.IntellijIdeaCommunity to "2024.2",
+    IntelliJPlatformType.IntellijIdeaCommunity to "2024.3",
+    IntelliJPlatformType.IntellijIdeaCommunity to "2025.2",
 )
 
 pluginVerifierIdes.forEach { (type, version) ->
