@@ -30,7 +30,7 @@ class JavaFlowExtractor(private val project: Project) : LanguageFlowExtractor {
 
     private val log = Logger.getInstance(JavaFlowExtractor::class.java)
 
-    override val supportedLanguages: Set<LanguageKind> = setOf(LanguageKind.JAVA, LanguageKind.KOTLIN)
+    override val supportedLanguages: Set<LanguageKind> = setOf(LanguageKind.JAVA)
 
     override fun extractFlow(
         file: PsiFile,
@@ -40,7 +40,7 @@ class JavaFlowExtractor(private val project: Project) : LanguageFlowExtractor {
     ): FlowExtractionOutcome {
         val languageKind = LanguageKindDetector.detect(file)
         val rootMethod = rootMethodAt(file, editor)
-            ?: return FlowExtractionOutcome.failure(languageKind, missingCaretMessage(languageKind))
+            ?: return FlowExtractionOutcome.failure(languageKind, missingCaretMessage())
 
         val result = try {
             buildFlow(rootMethod, maxDepth, includeModels)
@@ -61,11 +61,8 @@ class JavaFlowExtractor(private val project: Project) : LanguageFlowExtractor {
         return PsiTreeUtil.getParentOfType(leaf, PsiMethod::class.java)
     }
 
-    private fun missingCaretMessage(languageKind: LanguageKind): String = when (languageKind) {
-        LanguageKind.KOTLIN ->
-            "Kotlin PSI is not bundled with this plugin, so Kotlin flow extraction is not supported."
-        else -> "Please place the caret inside a method to extract the flow."
-    }
+    private fun missingCaretMessage(): String =
+        "Please place the caret inside a method to extract the flow."
 
     private fun buildFlow(rootMethod: PsiMethod, maxDepth: Int, includeModels: Boolean): FlowResult {
         val crawled = FlowCrawler(project)
