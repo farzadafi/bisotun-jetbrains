@@ -1148,13 +1148,9 @@ internal class JsFileOutlineBuilder(private val text: String) {
         if (paramsClose == -1) return index + 1
         val bodyOpen = findBodyBrace(paramsClose + 1)
         val endIndex = if (bodyOpen != -1 && bracketMatches[bodyOpen] != -1) bracketMatches[bodyOpen] else paramsClose
-        val startOffset = if (isAsync && index > 0 && tokens[index - 1].text == "async") {
-            tokens[index - 1].startOffset
-        } else if (name != null) {
-            tokens[nameIndex].startOffset
-        } else {
-            tokens[index].startOffset
-        }
+        // Declarations always start at their name so the emitted snippet begins with the
+        // signature, exactly like non-async functions (`async function f` and `function f` agree).
+        val startOffset = if (name != null) tokens[nameIndex].startOffset else tokens[index].startOffset
 
         if (name != null) {
             functions.add(
