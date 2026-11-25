@@ -78,8 +78,7 @@ class FlowExtractionDispatcher(private val project: Project) {
         extractors.firstOrNull { it.supports(languageKind) }
 
     private fun unsupportedLanguageMessage(languageKind: LanguageKind): String = when (languageKind) {
-        LanguageKind.KOTLIN ->
-            "Kotlin PSI is not bundled with this plugin, so Kotlin flow extraction is not supported."
+        LanguageKind.KOTLIN -> KOTLIN_PLUGIN_REQUIRED_MESSAGE
         LanguageKind.GO -> GO_PLUGIN_REQUIRED_MESSAGE
         LanguageKind.UNKNOWN -> "This file type is not supported by Bisotun."
         else -> "No flow extractor is registered for ${languageKind.displayName}."
