@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.2.0] - 2026-11-25
+
+### Added
+- **Native Kotlin flow extraction support** (`.kt`, `.kts`):
+  - Semantic PSI resolution leveraging official Kotlin PSI (`KtFile`, `KtNamedFunction`, `KtCallExpression`, `KtDotQualifiedExpression`, `KtClassOrObject`, `KtProperty`, `KtLambdaExpression`) and the Kotlin IDE plugin's reference resolution engine (supporting both K1 and K2 modes).
+  - Cross-file and cross-package reference binding, interface method call dispatch with candidate implementation discovery, companion objects, extension functions, higher-order functions, and lambda callbacks.
+  - Standard-library call filtering (`let`, `also`, `apply`, `run`, `sumOf`, etc.) to keep output strictly focused on project-level domain logic.
+- Isolated optional content module `bisotun-kotlin` (`org.jetbrains.kotlin`) with dynamic plugin classloading, ensuring seamless startup without runtime dependency errors on IDEs lacking the Kotlin plugin.
+
+### Platform and build
+- **Unified IntelliJ Platform & Verifier Matrix expansion**:
+  - Full compatibility verified across 23 target IDE builds spanning versions 2024.1 through 2026.1: IntelliJ IDEA (Ultimate & Community), GoLand, WebStorm, PyCharm Professional, and CLion.
+  - Updated configuration for IntelliJ Platform 2025.3+ unified distribution (`IntellijIdeaUltimate` covering both editions).
+
+---
+
 ## [1.1.0] - 2026-11-20
 
 ### Changed
