@@ -5,9 +5,9 @@
 | Language | Support |
 |---|---|
 | **Java** | Full support with extraction chain: controller -> service interface -> implementation -> repository -> method-reference mapper -> DTO record / projection. Reference based (`PsiMethod` + resolve + `DefinitionsScopedSearch`). |
+| **Kotlin** | Native support on Kotlin PSI plus the Kotlin plugin's semantic reference resolution (K1 and K2): cross-file calls, overloads, extension functions, constructors, private helpers, lambdas, callable references, infix calls, interface dispatch with labelled implementation candidates, models for project types, and honest `unresolved` nodes. Standard-library declarations are never expanded. |
 | **JavaScript / TypeScript / JSX / TSX** | Tiered support, decided at runtime (see below). Calls that cannot be resolved are reported as `unresolved` instead of being guessed. |
 | **Go** | Native Go PSI support for `.go` files (**requires GoLand with the bundled Go plugin**): packages/imports (aliases, dot and blank imports), structs, interfaces, embedded types, fields and tags, defined types and aliases, generics and constraints, functions/methods with pointer and value receivers, multiple return values, local and short declarations, composite literals, control flow, `defer`/`go`/`panic`/`recover`, closures, and calls resolved through JetBrains Go references across files and imported project packages. Interface calls stay at the interface declaration; unresolved/dynamic targets stay `unresolved`. |
-| **Kotlin** | Not supported (Kotlin PSI is not bundled with this plugin); the action reports that instead of producing an empty result. |
 
 JS/TS extraction is one `LanguageFlowExtractor` (`JsTsFlowExtractor`) with two runtime paths:
 
@@ -48,12 +48,14 @@ plugin PSI (plugin id `org.jetbrains.plugins.go`, the plugin GoLand bundles):
 
 - **GoLand 2024.1.4 / 2024.2 / 2024.3** - Required for Go extraction; the bundled Go plugin provides
   the Go PSI. Other languages keep their existing behaviour.
-- **IntelliJ IDEA Ultimate 2024.1.4** - Tier A for JS/TS (JavaScript plugin is bundled); Go works when
-  the Go plugin is installed.
-- **IntelliJ IDEA Community 2024.1.4** - Java support guaranteed; JS/TS works through Tier B, the
-  JavaScript plugin is **not** required. Go extraction is **not available** (no Go PSI).
+- **IntelliJ IDEA Ultimate 2024.1.4, 2024.2, 2024.3, 2025.2, 2025.3, 2026.1** - Primary Kotlin target
+  (the Kotlin plugin is bundled). Tier A for JS/TS; Go works when the Go plugin is installed.
+- **IntelliJ IDEA Community 2024.1.4, 2024.2, 2024.3, 2025.2** - The Kotlin plugin is bundled here
+  too, so Kotlin extraction works; 2025.3+ ships as one unified IntelliJ IDEA distribution, covered by
+  the Ultimate artifacts above.
 - **Other JetBrains products** (PyCharm, WebStorm, PhpStorm, Rider) - May have varying levels of
-  support depending on bundled language plugins; Go requires the Go plugin.
+  support depending on bundled language plugins; Kotlin requires the Kotlin plugin, Go requires the
+  Go plugin.
 
 ## Actions
 
@@ -142,7 +144,13 @@ The extracted flow is rendered as Markdown and copied to the clipboard:
    hide a call site from Tier B; Tier A is unaffected.
 5. **JSX/TSX component tags** are not call sites, so `<Foo />` does not create a flow edge; functions
    and hooks called inside the component body are expanded normally.
-6. **Kotlin** - no Kotlin PSI, so Kotlin files are reported as unsupported.
+6. **Kotlin** - Kotlin extraction needs the JetBrains Kotlin plugin (bundled in IntelliJ IDEA).
+   Calls are resolved semantically by the Kotlin plugin, never by name. Interface calls resolve to the
+   interface declaration; implementations found through Kotlin light classes are labelled
+   `[candidate implementation]` and may be omitted with strict wiring. The Analysis API
+   (`KaSession`) is intentionally not used because its experimental binary ABI is not stable across
+   the supported 2024.1-2026.1 Kotlin plugins; the reference API used here is stable and works in K1
+   and K2 modes. Standard-library calls, including unresolved stdlib noise, are not expanded.
 7. **Go requires GoLand / the Go plugin** - without the JetBrains Go plugin there is no Go PSI, so
    Go flow extraction is unavailable and the action says so. GoLand must have its bundled Go plugin
    enabled.
@@ -157,11 +165,12 @@ The extracted flow is rendered as Markdown and copied to the clipboard:
 ## Plugin Descriptor
 
 - **ID**: `com.bisotun.flowextractor`
-- **Version**: `1.1.0`
+- **Version**: `1.2.0`
 - **Vendor**: `Bisotun`
 - **Dependencies**: `com.intellij.modules.platform`. Java PSI is an optional content module
-  (`bisotun-java`, requires `com.intellij.modules.java`). Go PSI is an optional content module
-  (`bisotun-go`, requires `org.jetbrains.plugins.go`, provided by GoLand)
+  (`bisotun-java`, requires `com.intellij.modules.java`). Kotlin PSI is an optional content module
+  (`bisotun-kotlin`, requires `org.jetbrains.kotlin` and `com.intellij.modules.java`). Go PSI is an
+  optional content module (`bisotun-go`, requires `org.jetbrains.plugins.go`, provided by GoLand)
 - **Actions**: `CopyDeepFlowAction`, `CopyShallowFlowAction`, `CopyShallowFlowWithoutModelAction`,
   `CopyMethodOnlyAction`
 
@@ -176,5 +185,7 @@ The extracted flow is rendered as Markdown and copied to the clipboard:
 - Unresolved JS/TS calls are surfaced in the Markdown output instead of being silently dropped
 - Go extraction is registered only when the Go plugin PSI is present, and its platform-fixture
   tests run against real Go PSI (`GoFlowExtractorTest`, `GoCrossPackageResolutionTest`)
+- Kotlin extraction is registered only when the Kotlin plugin is present; its platform-fixture tests
+  run against real Kotlin PSI (`KotlinFlowExtractorTest`)
 - Unresolved Go calls are surfaced in the Markdown output instead of being matched by name
 - Clipboard feedback reports the language, the call count and the model count
