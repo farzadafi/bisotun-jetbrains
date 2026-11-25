@@ -62,7 +62,13 @@ class FlowExtractorRegressionTest {
 
     @Test
     fun `method only extracts just the root`() {
-        val result = extractor().extractFlow(filePath("sample.js"), source("sample.js"), "buildGreeting", maxDepth = 0)
+        val result = extractor().extractFlow(
+            filePath("sample.js"),
+            source("sample.js"),
+            "buildGreeting",
+            maxDepth = 0,
+            includeModels = false
+        )
 
         assertEquals(1, result.allNodes.size)
         assertEquals("buildGreeting(userId)", result.root.displayName)
