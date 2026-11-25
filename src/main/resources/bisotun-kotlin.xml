@@ -1,0 +1,10 @@
+<idea-plugin package="com.bisotun.kotlin">
+    <dependencies>
+        <plugin id="org.jetbrains.kotlin"/>
+        <!-- Interface implementations are looked up through Kotlin light classes. -->
+        <plugin id="com.intellij.modules.java"/>
+    </dependencies>
+    <extensions defaultExtensionNs="com.bisotun.flowextractor">
+        <languageFlowExtractor implementation="com.bisotun.kotlin.KotlinFlowExtractorProvider"/>
+    </extensions>
+</idea-plugin>
